@@ -52,7 +52,7 @@ OBJECT = "main.o"
 # --------------------------------------------------------------------------------------------------
 
 proj_dir = os.getcwd()
-resources_dir = os.path.join(proj_dir, "resources")
+resources_dir = os.path.join(proj_dir, "lib")
 
 # Configuration file for the collection of jobs.
 batch_configs_file = os.path.join(resources_dir, "configs.yaml")
@@ -181,6 +181,8 @@ def configure(scheme="fv"):
                 END_TIME = int(ncycle*z1/dt)
                 if nanalyze != 0:
                     ANAL_EVERY = int(END_TIME/nanalyze)
+                    if (ANAL_EVERY < 1):
+                        ANAL_EVERY = 1
                 else:
                     ANAL_EVERY = END_TIME + 1
 
@@ -214,7 +216,7 @@ def configure(scheme="fv"):
                 }
 
                 # ID for the job
-                config_id = f"{nz}_{nvz}_{CFL}_{alpha}"
+                config_id = f"{nz}_{nvz}_{CFL}"
 
                 # Making directory with name ID
                 model_dir = config_id
