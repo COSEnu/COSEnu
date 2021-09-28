@@ -51,7 +51,7 @@ void NuOsc::output_vsnap(double loc, const int t)
 }
 
 /*---------------------------------------------------------------------------*/
-void NuOsc::output_zsnap(const int vmode, const int t)
+void NuOsc::output_zsnap(const double vmode, const int t)
 {
     //Sanity check
     if (!(vmode >= vz0 && vmode <= vz1))

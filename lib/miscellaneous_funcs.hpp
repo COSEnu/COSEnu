@@ -16,7 +16,7 @@ void cssl_to_vec(std::string cssl, std::vector<T> &vec) //cssl -> comma-seperate
     // In case any accidantal space in the begining of cssl.
     cssl = cssl.substr(cssl.find_first_not_of(" "), end - 1) + ",;";
     std::string c = "";
-
+    
     while (true)
     {
         c = cssl.substr(0, cssl.find_first_of(","));

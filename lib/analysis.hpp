@@ -79,7 +79,7 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::averaged_survival_prob(const FieldVar *inF, const Profile *inF0, std::ofstream &surv_prob_ofstream,
+void NuOsc::    survival_prob(const FieldVar *inF, const FieldVar *inF0, std::ofstream &surv_prob_ofstream,
                                    const int time)
 {
     double num_Pee = 0;
@@ -94,8 +94,8 @@ void NuOsc::averaged_survival_prob(const FieldVar *inF, const Profile *inF0, std
         {
             num_Pee += inF->ee[idx(i, j)] * dz * dv;
             num_Pbee += inF->bee[idx(i, j)] * dz * dv;
-            dnom_Pee += inF0->G[idx(i, j)] * dz * dv;
-            dnom_Pbee += inF0->bG[idx(i, j)] * dz * dv;
+            dnom_Pee += inF0->ee[idx(i, j)] * dz * dv;
+            dnom_Pbee += inF0->bee[idx(i, j)] * dz * dv;
         }
     }
     surv_prob_ofstream << time << "\t"
@@ -106,34 +106,7 @@ void NuOsc::averaged_survival_prob(const FieldVar *inF, const Profile *inF0, std
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::survival_prob(const FieldVar *inF, std::ofstream &surv_prob_ofstream, const int time)
-{
-    double P_ee = 0;
-    double P_xx = 0;
-    double P_bee = 0;
-    double P_bxx = 0;
-
-    for (int i = 0; i < nvz; i++)
-    {
-        for (int j = 0; j < nz; j++)
-        {
-            P_ee += inF->ee[idx(i, j)] * dz * dv;
-            P_xx += inF->xx[idx(i, j)] * dz * dv;
-            P_bee += inF->bee[idx(i, j)] * dz * dv;
-            P_bxx += inF->bxx[idx(i, j)] * dz * dv;
-        }
-    }
-    surv_prob_ofstream << time << "\t"
-                       << std::scientific
-                       << P_ee / eln_0 << "\t"
-                       << P_xx / eln_0 << "\t"
-                       << P_bee / beln_0 << "\t"
-                       << P_bxx / beln_0 << std::endl;
-}
-
-/*---------------------------------------------------------------------------*/
-
-void NuOsc::averaged_survival_prob_v(const FieldVar *inF, const FieldVar *inF0, const int time)
+void NuOsc::dom_averaged_survival_prob(const FieldVar *inF, const FieldVar *inF0, const int time)
 {
     std::ofstream av_spv_ofstream;
     std::string av_spv_fname = "dom_avrgd_surv_prob_" + std::to_string(time) + "_.dat";

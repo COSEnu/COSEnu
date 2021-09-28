@@ -143,15 +143,15 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
             int s = sign(vz[i]);
             int ij = idx(i, j);
 
-            out->ee[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->ee[ij] - flux->rflux->ee[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->ee[ij + 1] - flux->lflux->ee[ij]);
-            out->xx[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->xx[ij] - flux->rflux->xx[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->xx[ij + 1] - flux->lflux->xx[ij]);
-            out->ex_re[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->ex_re[ij] - flux->rflux->ex_re[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->ex_re[ij + 1] - flux->lflux->ex_re[ij]);
-            out->ex_im[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->ex_im[ij] - flux->rflux->ex_im[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->ex_im[ij + 1] - flux->lflux->ex_im[ij]);
+            out->ee[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->ee[ij] - flux->rflux->ee[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->ee[ij + 1] - flux->lflux->ee[ij]);
+            out->xx[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->xx[ij] - flux->rflux->xx[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->xx[ij + 1] - flux->lflux->xx[ij]);
+            out->ex_re[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->ex_re[ij] - flux->rflux->ex_re[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->ex_re[ij + 1] - flux->lflux->ex_re[ij]);
+            out->ex_im[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->ex_im[ij] - flux->rflux->ex_im[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->ex_im[ij + 1] - flux->lflux->ex_im[ij]);
 
-            out->bee[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->bee[ij] - flux->rflux->bee[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bee[ij + 1] - flux->lflux->bee[ij]);
-            out->bxx[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->bxx[ij] - flux->rflux->bxx[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bxx[ij + 1] - flux->lflux->bxx[ij]);
-            out->bex_re[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->bex_re[ij] - flux->rflux->bex_re[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bex_re[ij + 1] - flux->lflux->bex_re[ij]);
-            out->bex_im[idx(i, j)] = fac * fabs(1 + s) / 2 * (flux->rflux->bex_im[ij] - flux->rflux->bex_im[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bex_im[ij + 1] - flux->lflux->bex_im[ij]);
+            out->bee[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bee[ij] - flux->rflux->bee[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bee[ij + 1] - flux->lflux->bee[ij]);
+            out->bxx[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bxx[ij] - flux->rflux->bxx[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bxx[ij + 1] - flux->lflux->bxx[ij]);
+            out->bex_re[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bex_re[ij] - flux->rflux->bex_re[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bex_re[ij + 1] - flux->lflux->bex_re[ij]);
+            out->bex_im[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bex_im[ij] - flux->rflux->bex_im[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bex_im[ij + 1] - flux->lflux->bex_im[ij]);
 #endif
 
 #ifdef VAC_OSC_ON

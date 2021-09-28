@@ -2,13 +2,13 @@
 
 # Spatial domain specifics.
 zrange:  [-600, 600]
-nzs    :  [1000, 2000, 4000, 8000, 16000]
-CFLS   :  [0.2, 0.4, 0.6, 0.8, 1.0]
+nzs    :  [2000,] # 2000, 4000, 8000,]
+CFLS   :  [0.2,] # 0.4, 0.6, 0.8, 1.0]
 
 # Phase-space specifics.
 v0     : -1.0
 v1     :  1.0
-nvzs   :  [2,] # 50, 100, 200]
+nvzs   :  [50,] # 100, 200]
 
 # END_TIME will be estimated using END_TIME = int(ncycle*(z1/dt))
 ncycle  : 1
@@ -18,13 +18,13 @@ ncycle  : 1
 advection_off : False # Options -> True, False
 
 # Switch on/off vacuum oscillation
-vac_osc_on : True # options -> True, False
+vac_osc_on : False # options -> True, False
 pmo : 1.0 # 1.0 -> normal mass ordering, -1.0 -> inverted mass ordering, 0.0 -> no vacuum term.
 omega : 1.0 # \Dedlta m^2/2E.
 theta : 37 # Vacuum mixing angle in degrees.
 
 # Switch on/off collective oscillations
-collective_osc_on : False # Options -> True, False
+collective_osc_on : True # Options -> True, False
 mu : 1.0 # \sqrt{2} G_F n_{\nu_e}
 # For gaussian perturbations
 signu  : 0.6
@@ -33,15 +33,15 @@ alpha  : 0.9 # \nu-\bar{\nu} asymmetry parameter.
 vmode_P : 1.0 # velocity mode for printing <P_v>
 
 # ANALYSIS
-nanalyze : 100 # Total number of analysis to be carried out per job.
+nanalyze : 50 # Total number of analysis to be carried out per job.
 
-n_vsnap : 0 # snapshot of phase-space at vsnap_zlocs
-vsnap_zlocs : [0,] # z-locations for phsse-space snapshots.
+n_vsnap : 5 # snapshot of phase-space at vsnap_zlocs
+vsnap_zlocs : [-300, 0, 300] # z-locations for phsse-space snapshots.
 
-n_zsnaps : 0 # snapshot of entire domain for the v_modes at zsnap_vmodes
+n_zsnaps : 5 # snapshot of entire domain for the v_modes at zsnap_vmodes
              # between time = 0 and time = END_TIME
-zsnap_vmodes : [-1,1] # v-modes for entire domain snapshots. 
+zsnap_vmodes : [-1, -0.5, 0, 0.5, 1] # v-modes for full spatial domain snapshots. 
 
 # Folder names
-folder_fv : "vac_osc_test_fv"
-folder_fd : "vac_osc_test_fd"
+folder_fv : "collosc_with_snaps_fv"
+folder_fd : "collosc_with_snaps_fd"

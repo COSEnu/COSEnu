@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	int v_snap_interval;
 
 	int n_zsnap = 0;
-	std::vector<int> zsnap_vmodes;
+	std::vector<double> zsnap_vmodes;
 	int z_snap_interval;
 
 	double vmode_P = 0;
@@ -320,25 +320,28 @@ int main(int argc, char *argv[])
 
 	state.initialize();
 	FieldVar *v_stat0 = new FieldVar(state.size);
+
+	//........................ COPYING INITIAL STATE ....................... //
+
 	state.copy_state(state.v_stat, v_stat0);
+
 	//......................... OUTPUT FILE STREAMS .........................//
+
+	std::ofstream surv_prob_ofstream;
+	std::string surv_prob_fname = ID + "_survival_prob.dat";
+	surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
+	if (!surv_prob_ofstream)
+	{
+		std::cout << "Unable to open " << surv_prob_fname << std::endl;
+	}
+	else
+	{
+		surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
+	}
 
 #ifdef COLL_OSC_ON
 	std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
 	std::string conserved_fname = ID + "_conserved_quantities.dat";
-
-	std::ofstream av_surv_prob_ofstream;
-	std::string av_surv_prob_fname = ID + "_averaged_survival_prob.dat";
-
-	av_surv_prob_ofstream.open(av_surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
-	if (!av_surv_prob_ofstream)
-	{
-		std::cout << "Unable to open " << av_surv_prob_fname << std::endl;
-	}
-	else
-	{
-		av_surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
-	}
 
 	con_qty_ofstream.open(conserved_fname, std::ofstream::out | std::ofstream::trunc);
 	if (!con_qty_ofstream)
@@ -352,23 +355,14 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-	std::ofstream surv_prob_ofstream;
-	std::string surv_prob_fname = ID + ".total_survival_prob.dat";
-	surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
-	if (!surv_prob_ofstream)
-	{
-		cout << "Unable to open " << surv_prob_fname << endl;
-	}
-
 	//......................... EVALUATING INITIAL STATE .........................//
 
 #ifdef COLL_OSC_ON
 	Pol *P0 = new Pol(state.size);
 	state.cal_P(state.v_stat, P0); // P0 stores initial polarization.
 	state.analyse(state.v_stat, P0, con_qty_ofstream, 0, 0);
-	state.averaged_survival_prob(state.v_stat, state.G0, av_surv_prob_ofstream, 0);
 #endif
-	state.survival_prob(state.v_stat, surv_prob_ofstream, 0);
+	state.survival_prob(state.v_stat, v_stat0, surv_prob_ofstream, 0);
 
 	//......................... INITIAL STATE SNAPSHOTS .........................//
 
@@ -406,9 +400,9 @@ int main(int argc, char *argv[])
 	}
 	t_vsnap += v_snap_interval;
 
-#ifdef COLL_OSC_ON
-	state.averaged_survival_prob_v(state.v_stat, v_stat0, 0);
-#endif
+// #ifdef COLL_OSC_ON
+// 	state.averaged_survival_prob_v(state.v_stat, v_stat0, 0);
+// #endif
 
 	// ......................... EVOLVING THE STATE ......................... //
 	std::cout << "Running..." << std::endl
@@ -444,9 +438,8 @@ int main(int argc, char *argv[])
 		{
 #ifdef COLL_OSC_ON
 			state.analyse(state.v_stat, P0, con_qty_ofstream, 0, t);
-			state.averaged_survival_prob(state.v_stat, v_stat0, av_surv_prob_ofstream, t);
 #endif
-			state.survival_prob(state.v_stat, surv_prob_ofstream, t);
+			state.survival_prob(state.v_stat, v_stat0, surv_prob_ofstream, t);
 		}
 
 		if (t % ((int)(END_TIME) / 10) == 0)
@@ -460,12 +453,12 @@ int main(int argc, char *argv[])
 	std::cout << std::endl;
 
 #ifdef COLL_OSC_ON
-	state.averaged_survival_prob_v(state.v_stat, v_stat0, END_TIME - 1);
+	state.dom_averaged_survival_prob(state.v_stat, v_stat0, END_TIME - 1);
 #endif
 
 #ifdef COLL_OSC_ON
 	con_qty_ofstream.close();
-	av_surv_prob_ofstream.close();
+	surv_prob_ofstream.close();
 #endif
 	surv_prob_ofstream.close();
 
