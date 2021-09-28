@@ -222,7 +222,7 @@ def configure(scheme="fv"):
                 model_dir = config_id
 
                 # Config file for the job "ID"
-                config_file = f"job.config"
+                config_file = "job.config"
 
                 config_list.append({"id": config_id, "file": config_file})
 
@@ -318,7 +318,7 @@ def submit_with_condor(scheme):
             model_job_config_file = os.path.join(model_dir, f'job.req')
 
             with open(model_job_config_file, 'w') as f:
-                f.write(f"{id}" + ", " + f"{config_file}")
+                f.write(f"{id},job.config")
 
             os.system(f"condor_submit job.submit")
             os.chdir(pwd)
