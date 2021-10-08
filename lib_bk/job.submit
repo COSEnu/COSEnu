@@ -1,6 +1,6 @@
 universe = vanilla
-request_cpus = 20
-request_memory = 5 GB
+request_cpus = 10
+request_memory = 32 GB
 executable = main 
 arguments  = --id $(id) --conf $(config)
 transfer_output = true

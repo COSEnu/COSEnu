@@ -222,7 +222,7 @@ def configure(scheme="fv"):
                 model_dir = config_id
 
                 # Config file for the job "ID"
-                config_file = "job.config"
+                config_file = f"job.config"
 
                 config_list.append({"id": config_id, "file": config_file})
 
