@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 	}
 
 	// ......................... PARSING CONFIG-FILE ......................... //
-
+	
 	while (config)
 	{
 		std::getline(config, line);
@@ -400,10 +400,6 @@ int main(int argc, char *argv[])
 	}
 	t_vsnap += v_snap_interval;
 
-// #ifdef COLL_OSC_ON
-// 	state.averaged_survival_prob_v(state.v_stat, v_stat0, 0);
-// #endif
-
 	// ......................... EVOLVING THE STATE ......................... //
 	std::cout << "Running..." << std::endl
 			  << std::endl;
@@ -449,7 +445,7 @@ int main(int argc, char *argv[])
 					  << std::endl;
 		}
 	}
-	std::cout << " 100 %" <<std::endl;
+	std::cout << " 100 %" << std::endl;
 	std::cout << std::endl;
 
 #ifdef COLL_OSC_ON

@@ -64,6 +64,10 @@ void NuOsc::cal_P(const FieldVar *inField, Pol *inP)
 
 void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 {
+    /*
+        Subroutine to calculate the moments. L(vz[i], n) returns the legendre polynomial 
+        of order n (up to 5) for the mode vz[i]
+    */
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < nz; j++)
@@ -79,9 +83,12 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::    survival_prob(const FieldVar *inF, const FieldVar *inF0, std::ofstream &surv_prob_ofstream,
+void NuOsc::survival_prob(const FieldVar *inF, const FieldVar *inF0, std::ofstream &surv_prob_ofstream,
                                    const int time)
 {
+    /*
+        Total survival probabilities of \nu and \bar\nu.
+    */
     double num_Pee = 0;
     double num_Pbee = 0;
 
@@ -108,6 +115,9 @@ void NuOsc::    survival_prob(const FieldVar *inF, const FieldVar *inF0, std::of
 
 void NuOsc::dom_averaged_survival_prob(const FieldVar *inF, const FieldVar *inF0, const int time)
 {
+    /*
+      Survival probabilities of each mode averaged over the domain at a give time.
+    */
     std::ofstream av_spv_ofstream;
     std::string av_spv_fname = "dom_avrgd_surv_prob_" + std::to_string(time) + "_.dat";
     av_spv_ofstream.open(av_spv_fname, std::ofstream::out | std::ofstream::trunc);

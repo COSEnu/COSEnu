@@ -3,12 +3,12 @@
 # Spatial domain specifics.
 zrange:  [-600, 600]
 nzs    :  [1000,] # 2000, 4000, 8000,]
-CFLS   :  [0.125,] #[0.2, 0.4, 0.6, 0.8, 1.0]
+CFLS   :  [0.2] #, 0.4, 0.6, 0.8, 1.0]
 
 # Phase-space specifics.
 v0     : -1.0
 v1     :  1.0
-nvzs   :  [100]
+nvzs   :  [50]
 
 # END_TIME will be estimated using END_TIME = int(ncycle*(z1/dt))
 ncycle  : 2
