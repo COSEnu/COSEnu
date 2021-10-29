@@ -15,13 +15,13 @@ void NuOsc::initialize()
             G0->G[idx(i, j)] = g(vz[i], 1.0, signu);
             G0->bG[idx(i, j)] = alpha * g(vz[i], 1.0, siganu);
 
-            v_stat->ee[idx(i, j)] = 0.5 * G0->G[idx(i, j)] * (1.0 + eps_(Z[j], 0.0)); //gauss(Z[j], 0.0, 50);
-            v_stat->xx[idx(i, j)] = 0.5 * G0->G[idx(i, j)] * (1.0 - eps_(Z[j], 0.0));
+            v_stat->ee[idx(i, j)]    = 0.5 * G0->G[idx(i, j)] * (1.0 + eps_(Z[j], 0.0)); 
+            v_stat->xx[idx(i, j)]    = 0.5 * G0->G[idx(i, j)] * (1.0 - eps_(Z[j], 0.0));
             v_stat->ex_re[idx(i, j)] = 0.5 * G0->G[idx(i, j)] * (0.0 + eps(Z[j], 0.0));
             v_stat->ex_im[idx(i, j)] = -0.0;
 
-            v_stat->bee[idx(i, j)] = 0.5 * G0->bG[idx(i, j)] * (1.0 + eps_(Z[j], 0.0)); //gauss(Z[j], 0.0, 50);
-            v_stat->bxx[idx(i, j)] = 0.5 * G0->bG[idx(i, j)] * (1.0 - eps_(Z[j], 0.0));
+            v_stat->bee[idx(i, j)]    = 0.5 * G0->bG[idx(i, j)] * (1.0 + eps_(Z[j], 0.0)); 
+            v_stat->bxx[idx(i, j)]    = 0.5 * G0->bG[idx(i, j)] * (1.0 - eps_(Z[j], 0.0));
             v_stat->bex_re[idx(i, j)] = 0.5 * G0->bG[idx(i, j)] * (0.0 + eps(Z[j], 0.0));
             v_stat->bex_im[idx(i, j)] = 0.0;
         }

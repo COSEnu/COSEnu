@@ -21,8 +21,8 @@ except ImportError:
     print(f"[ FAIL ]...unable to import the python package 'shutil'.")
     sys.exit()
 # --------------------------------------------------------------------------------------------------
-file_exists_warning_prompt = ("[ WARNING ]...The existing directrories and will be removed. " +
-                              "Do you want to continue? (y/n): "
+file_exists_warning_prompt = ("[ WARNING ]...The existing directrories and will be removed. " + 
+                            "Do you want to continue? (y/n): "
                               )
 # --------------------------------------------------------------------------------------------------
 """
@@ -105,7 +105,7 @@ def configure(scheme="fv"):
     sig_nu = config["signu"]
     sig_anu = config["siganu"]
     alpha = config["alpha"]
-    ncycle = config["ncycle"]
+    end_time = config["end_time"]
     nanalyze = config["nanalyze"]
     scheme_dir = os.path.join(proj_dir,  config[f'folder_{scheme}'])
 
@@ -178,7 +178,7 @@ def configure(scheme="fv"):
                 dz = (z1-z0)/nz
                 dvz = (v1-v0)/nvz
                 dt = CFL*dz/v1
-                END_TIME = int(ncycle*z1/dt)
+                END_TIME = int(end_time/dt)
                 if nanalyze != 0:
                     ANAL_EVERY = int(END_TIME/nanalyze)
                     if (ANAL_EVERY < 1):

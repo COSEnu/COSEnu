@@ -405,6 +405,7 @@ int main(int argc, char *argv[])
 			  << std::endl;
 	for (int t = 1; t < END_TIME; t++)
 	{
+		std::cout << t << "\n";
 		state.step_rk4();
 
 		// ......................... Phase-space snapshots ......................... //
