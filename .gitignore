@@ -1,2 +1,4 @@
 *.dat
+*.txt
 *.ipynb
+lib_bk/
