@@ -1,48 +1,81 @@
-void NuOsc::analyse(const FieldVar *inField, const Pol *inP0, std::ofstream &con_qty_ofstream,
-                    unsigned int n, const int time)
+void NuOsc::analyse(const FieldVar *ivstate, const Pol *iP0, uint n, uint t)
 {
+    /****************************************************************************************/
+    /* Subroutine to check the deviation of conserved quantities.                           */
+    /*                                                                                      */
+    /* (1)---                                                                               */
+    /*   Estimate maximal deviation of polarization,max(ep_i) for all ep_i belongs to       */
+    /*   {P(z_j, v_i) - P0(z_j, v_i)}, i:0->nvz, j:0->nz.                                   */
+    /*                                                                                      */
+    /* (2)---                                                                               */
+    /*   Evaluate M_0                                                                       */
+    /****************************************************************************************/
 
-    Pol *P = new Pol(size);
-    M *M0 = new M(0);
+    std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
+    std::string con_qty_fname = ID + "_conserved_quantities.dat";
 
-    cal_P(inField, P); // Calculating the components of polarization.
-    cal_Mn(M0, P, 0);  // Calculating the components of M_0
-
-    double dP = 0.0;
-    double dbP = 0.0;
-    double Nee0 = 0.0;
-    double Nbee0 = 0.0;
-    double meandP = 0.0;
-    double meanbdP = 0.0;
-    double avP_v = 0.0;
-
-    for (int i = 0; i < nvz; i++)
+    if (t == 0)
     {
-        for (int j = 0; j < nz; j++)
-        {
-            dP = (dP >= fabs(P->normP[idx(i, j)] - inP0->normP[idx(i, j)])) ? dP : fabs(P->normP[idx(i, j)] - inP0->normP[idx(i, j)]);
-            dbP = (dbP >= fabs(P->normbP[idx(i, j)] - inP0->normbP[idx(i, j)])) ? dbP : fabs(P->normbP[idx(i, j)] - inP0->normbP[idx(i, j)]);
-
-            meandP += fabs(P->normP[idx(i, j)] - inP0->normP[idx(i, j)]) * G0->G[idx(i, j)] * dz * dv;
-            meanbdP += fabs(P->normbP[idx(i, j)] - inP0->normbP[idx(i, j)]) * G0->bG[idx(i, j)] * dz * dv;
-            Nee0 += G0->G[idx(i, j)] * dz * dv;
-            Nbee0 += G0->bG[idx(i, j)] * dz * dv;
-        }
+        con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::trunc);
     }
+    else
+    {
+        con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::app);
+    }
+    if (!con_qty_ofstream)
+    {
+        std::cout << "Unable to open " << con_qty_fname << std::endl;
+        return;
+    }
+    else
+    {
+        if (t == 0)
+            con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t), |M0|]\n";
 
-    con_qty_ofstream << time << "\t"
-                     << std::scientific
-                     << ((dP >= dbP) ? dP : dbP) << "\t"
-                     << meandP / Nee0 << "\t"
-                     << meanbdP / Nbee0 << "\t"
-                     << M0->norm << endl;
-    delete P;
-    delete M0;
+        Pol *P = new Pol(size);
+        M *M0 = new M(0);
+
+        cal_pol(ivstate, P); // Calculating the components of polarization.
+        cal_Mn(M0, P, 0);    // Calculating the components of M_0
+
+        double dP   = 0.0;
+        double dbP  = 0.0;
+        double Nee0 = 0.0;
+        double Nbee0 = 0.0;
+        double avdP  = 0.0;
+        double avbdP = 0.0;
+
+        for (int i = 0; i < nvz; i++)
+        {
+            for (int j = 0; j < nz; j++)
+            {
+                dP = (dP >= fabs(P->normP[idx(i, j)] - iP0->normP[idx(i, j)])) ? dP : fabs(P->normP[idx(i, j)] - iP0->normP[idx(i, j)]);
+                dbP = (dbP >= fabs(P->normbP[idx(i, j)] - iP0->normbP[idx(i, j)])) ? dbP : fabs(P->normbP[idx(i, j)] - iP0->normbP[idx(i, j)]);
+
+                avdP += fabs(P->normP[idx(i, j)] - iP0->normP[idx(i, j)]) * G0->G[idx(i, j)] * dz * dv;
+                avbdP += fabs(P->normbP[idx(i, j)] - iP0->normbP[idx(i, j)]) * G0->bG[idx(i, j)] * dz * dv;
+
+                Nee0 += G0->G[idx(i, j)] * dz * dv;
+                Nbee0 += G0->bG[idx(i, j)] * dz * dv;
+            }
+        }
+
+        con_qty_ofstream << t << "\t"
+                         << std::scientific
+                         << ((dP >= dbP) ? dP : dbP) << "\t"
+                         << avdP / Nee0 << "\t"
+                         << avbdP / Nbee0 << "\t"
+                         << M0->norm << endl;
+        delete P;
+        delete M0;
+        con_qty_ofstream.close();
+    }
 }
 
-void NuOsc::cal_P(const FieldVar *inField, Pol *inP)
+void NuOsc::cal_pol(const FieldVar *inField, Pol *inP)
 {
-    // Calculate the polarization(\vec {P}) of nu and anu and respective |\vec{P}|
+    /* Calculate the polarization(\vec {P}) of nu and anu and respective |\vec{P}|*/
+
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < nz; j++)
@@ -83,12 +116,31 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::survival_prob(const FieldVar *inF, const FieldVar *inF0, std::ofstream &surv_prob_ofstream,
-                                   const int time)
+void NuOsc::survival_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
 {
     /*
         Total survival probabilities of \nu and \bar\nu.
     */
+
+    std::ofstream surv_prob_ofstream;
+    std::string surv_prob_fname = ID + "_survival_probability.dat";
+    if (t == 0)
+    {
+        surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
+    }
+    else
+    {
+        surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::app);
+    }
+
+    if (!surv_prob_ofstream)
+    {
+        std::cout << "Unable to open " << surv_prob_fname << std::endl;
+    }
+    else
+    {
+        surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
+    }
     double num_Pee = 0;
     double num_Pbee = 0;
 
@@ -99,27 +151,30 @@ void NuOsc::survival_prob(const FieldVar *inF, const FieldVar *inF0, std::ofstre
     {
         for (int j = 0; j < nz; j++)
         {
-            num_Pee += inF->ee[idx(i, j)] * dz * dv;
-            num_Pbee += inF->bee[idx(i, j)] * dz * dv;
-            dnom_Pee += inF0->ee[idx(i, j)] * dz * dv;
-            dnom_Pbee += inF0->bee[idx(i, j)] * dz * dv;
+            num_Pee += ivstate->ee[idx(i, j)] * dz * dv;
+            num_Pbee += ivstate->bee[idx(i, j)] * dz * dv;
+            dnom_Pee += ivstate0->ee[idx(i, j)] * dz * dv;
+            dnom_Pbee += ivstate0->bee[idx(i, j)] * dz * dv;
         }
     }
     surv_prob_ofstream << time << "\t"
                        << std::scientific
                        << num_Pee / dnom_Pee << "\t"
                        << num_Pbee / dnom_Pbee << std::endl;
+
+    surv_prob_ofstream.close();
 }
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::dom_averaged_survival_prob(const FieldVar *inF, const FieldVar *inF0, const int time)
+void NuOsc::dom_averaged_survival_prob(const FieldVar *ivstate, const FieldVar *ivstate0, const uint t)
 {
     /*
       Survival probabilities of each mode averaged over the domain at a give time.
     */
+
     std::ofstream av_spv_ofstream;
-    std::string av_spv_fname = "dom_avrgd_surv_prob_" + std::to_string(time) + "_.dat";
+    std::string av_spv_fname = "dom_avrgd_surv_prob_" + std::to_string(t) + "_.dat";
     av_spv_ofstream.open(av_spv_fname, std::ofstream::out | std::ofstream::trunc);
     if (!av_spv_ofstream)
     {
@@ -140,11 +195,11 @@ void NuOsc::dom_averaged_survival_prob(const FieldVar *inF, const FieldVar *inF0
 
         for (int j = 0; j < nz; j++)
         {
-            P_ee += inF->ee[idx(i, j)] * dz;
-            P_bee += inF->bee[idx(i, j)] * dz;
+            P_ee += ivstate->ee[idx(i, j)] * dz;
+            P_bee += ivstate->bee[idx(i, j)] * dz;
 
-            P_ee0 += inF0->ee[idx(i, j)] * dz;
-            P_bee0 += inF0->bee[idx(i, j)] * dz;
+            P_ee0 += ivstate0->ee[idx(i, j)] * dz;
+            P_bee0 += ivstate0->bee[idx(i, j)] * dz;
         }
         av_spv_ofstream << std::scientific << vz[i] << "\t"
                         << (P_ee / P_ee0) << "\t"
@@ -155,21 +210,21 @@ void NuOsc::dom_averaged_survival_prob(const FieldVar *inF, const FieldVar *inF0
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::copy_state(const FieldVar *inF, FieldVar *F)
+void NuOsc::copy_state(const FieldVar *ivstate, FieldVar *cpvstate)
 {
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < nz; j++)
         {
-            F->ee[idx(i, j)] = inF->ee[idx(i, j)];
-            F->xx[idx(i, j)] = inF->xx[idx(i, j)];
-            F->ex_re[idx(i, j)] = inF->ex_re[idx(i, j)];
-            F->ex_im[idx(i, j)] = inF->ex_im[idx(i, j)];
+            cpvstate->ee[idx(i, j)] = ivstate->ee[idx(i, j)];
+            cpvstate->xx[idx(i, j)] = ivstate->xx[idx(i, j)];
+            cpvstate->ex_re[idx(i, j)] = ivstate->ex_re[idx(i, j)];
+            cpvstate->ex_im[idx(i, j)] = ivstate->ex_im[idx(i, j)];
 
-            F->bee[idx(i, j)] = inF->bee[idx(i, j)];
-            F->bxx[idx(i, j)] = inF->bxx[idx(i, j)];
-            F->bex_re[idx(i, j)] = inF->bex_re[idx(i, j)];
-            F->bex_im[idx(i, j)] = inF->bex_im[idx(i, j)];
+            cpvstate->bee[idx(i, j)] = ivstate->bee[idx(i, j)];
+            cpvstate->bxx[idx(i, j)] = ivstate->bxx[idx(i, j)];
+            cpvstate->bex_re[idx(i, j)] = ivstate->bex_re[idx(i, j)];
+            cpvstate->bex_im[idx(i, j)] = ivstate->bex_im[idx(i, j)];
         }
     }
 }

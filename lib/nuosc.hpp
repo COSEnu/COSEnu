@@ -116,12 +116,9 @@ public:
         ct = (1.0/2.0)*omega_ * cos(2.0 * theta);
         st = (1.0/2.0)*omega_ * sin(2.0 * theta);
     }
-    void set_collective_pars(double mu_, double signu_, double siganu_, double alpha_)
+    void set_collective_pars(double mu_)
     {
         mu = mu_;
-        signu = signu_;
-        siganu = siganu_;
-        alpha = alpha_;
     }
     inline unsigned int idx(const int i, const int j)
     {
@@ -144,14 +141,15 @@ public:
     // State outputs
     void output_vsnap(const double, const int);
     void output_zsnap(const double, const int);
+    void schedule_outputs(void);
 
-    // Analysis specific methods.
+    // Analysis related methods.
     // Edit these functions as per the requirement.
-    void cal_P(const FieldVar *, Pol *);
+    void cal_pol(const FieldVar *, Pol *);
     void cal_Mn(M *, const Pol *, unsigned int);
-    void analyse(const FieldVar *, const Pol *, std::ofstream &, unsigned int, const int);
-    void survival_prob(const FieldVar *, const FieldVar *, std::ofstream &, const int );
-    void dom_averaged_survival_prob(const FieldVar *, const FieldVar *, const int );
+    void analyse(const FieldVar *, const Pol *, uint, uint);
+    void survival_prob(const FieldVar *, const FieldVar *, const uint );
+    void dom_averaged_survival_prob(const FieldVar *, const FieldVar *, const uint );
 };
 
 void NuOsc::updateBufferZone(FieldVar *in)

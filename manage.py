@@ -35,6 +35,7 @@ source_files = [
     'Makefile.inc',
     'structures.hpp',
     presets_filename,
+    'parser.hpp',
     'main.cpp',
     'nuosc.hpp',
     'rhs_fv.hpp',
@@ -102,9 +103,6 @@ def configure(scheme="fv"):
     z = config["zrange"]
     v0 = config["v0"]
     v1 = config["v1"]
-    sig_nu = config["signu"]
-    sig_anu = config["siganu"]
-    alpha = config["alpha"]
     end_time = config["end_time"]
     nanalyze = config["nanalyze"]
     scheme_dir = os.path.join(proj_dir,  config[f'folder_{scheme}'])
@@ -201,9 +199,6 @@ def configure(scheme="fv"):
                     'dt': dt,
                     'END_TIME': END_TIME,
                     'ANAL_EVERY': ANAL_EVERY,
-                    'sig_nu': sig_nu,
-                    'sig_anu': sig_anu,
-                    'alpha': alpha,
                     'pmo': config['pmo'],
                     'omega': config['omega'],
                     'theta': config['theta'],
