@@ -141,7 +141,7 @@ public:
     // State outputs
     void output_vsnap(const double, const int);
     void output_zsnap(const double, const int);
-    void schedule_outputs(void);
+    void full_snap(const FieldVar*, std::string );
 
     // Analysis related methods.
     // Edit these functions as per the requirement.

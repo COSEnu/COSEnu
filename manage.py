@@ -174,15 +174,14 @@ def configure(scheme="fv"):
                 z0 = z[0]
                 z1 = z[1]
                 dz = (z1-z0)/nz
-                dvz = (v1-v0)/nvz
-                dt = CFL*dz/v1
-                END_TIME = int(end_time/dt)
+                dt = abs(CFL*dz/v1)
+                N_ITER = int(end_time/dt)
                 if nanalyze != 0:
-                    ANAL_EVERY = int(END_TIME/nanalyze)
+                    ANAL_EVERY = int(N_ITER/nanalyze)
                     if (ANAL_EVERY < 1):
                         ANAL_EVERY = 1
                 else:
-                    ANAL_EVERY = END_TIME + 1
+                    ANAL_EVERY = N_ITER + 1
 
                 current_config = {
                     'scheme': scheme.upper(),
@@ -194,20 +193,17 @@ def configure(scheme="fv"):
                     'v0': v0,
                     'v1': v1,
                     'nz': nz,
-                    'dz': dz,
-                    'dvz': dvz,
-                    'dt': dt,
-                    'END_TIME': END_TIME,
+                    'N_ITER': N_ITER,
                     'ANAL_EVERY': ANAL_EVERY,
                     'pmo': config['pmo'],
                     'omega': config['omega'],
                     'theta': config['theta'],
                     'mu': config['mu'],
+                    'nfullsnaps' : config['nfullsnaps'],
                     'n_vsnap' : config['n_vsnap'],
                     'vsnap_zlocs' : config['vsnap_zlocs'],
                     'n_zsnaps' : config['n_zsnaps'],
                     'zsnap_vmodes' : config['zsnap_vmodes'],
-                    # 'vmode_P' : config['vmode_P'],
                 }
 
                 # ID for the job

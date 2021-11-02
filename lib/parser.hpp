@@ -4,7 +4,7 @@ public:
     std::string SCHEME;
 
     // Simulation specific configs.
-    int END_TIME = 0;
+    int N_ITER = 0;
     int DUMP_EVERY = 0;
     int ANAL_EVERY = 0;
 
@@ -24,6 +24,9 @@ public:
     double mu = 1.0;
 
     //Analysis related
+    int nfullsnaps = 0;
+    int fullsnap_interval = 0;
+
     int n_vsnap = 0;
     std::vector<double> vsnap_zlocs;
     int v_snap_interval;
@@ -41,7 +44,7 @@ public:
     bool is_v1 = false;
     bool is_CFL = false;
     bool is_gz = false;
-    bool is_END_TIME = false;
+    bool is_N_ITER = false;
     bool is_ANAL_EVERY = false;
     bool is_pmo = false;
     bool is_omega = false;
@@ -126,10 +129,10 @@ Params::Params(std::string CONFIG_FILE)
                 string_to_type(value, v1);
                 is_v1 = true;
             }
-            else if (key == "END_TIME")
+            else if (key == "N_ITER")
             {
-                string_to_type(value, END_TIME);
-                is_END_TIME = true;
+                string_to_type(value, N_ITER);
+                is_N_ITER = true;
             }
             else if (key == "ANAL_EVERY")
             {
@@ -160,6 +163,10 @@ Params::Params(std::string CONFIG_FILE)
                 is_mu = true;
             }
 #endif
+            else if (key == "nfullsnaps")
+            {
+                string_to_type(value, nfullsnaps);
+            }
             else if (key == "n_vsnap")
             {
                 string_to_type(value, n_vsnap);
@@ -186,12 +193,42 @@ Params::Params(std::string CONFIG_FILE)
     //----------------------------------------------------------
 
     if (!(is_scheme && is_nz && is_nvz && is_z0 && is_z1 && is_v0 && is_v1 && is_CFL && is_gz &&
-          is_END_TIME && is_ANAL_EVERY))
+          is_N_ITER && is_ANAL_EVERY))
     {
         std::cout << "[ FAIL ]...Incomplete config file" << std::endl
                   << "Exiting." << std::endl;
         exit(0);
     }
+    // Snapshot intervals
+    // z-snapshot for given vmodes
+    if (n_zsnap > 0)
+	{
+	    z_snap_interval = (int)(N_ITER / n_zsnap);
+	}
+	else
+	{
+		z_snap_interval = N_ITER+1;
+	}
+
+    // v-snapshots at given locations
+    if (n_vsnap > 0)
+	{
+		v_snap_interval = (int)(N_ITER / n_vsnap);
+	}
+	else
+	{
+		v_snap_interval = N_ITER+1;
+	}
+
+    // Full snapshots
+    if ( nfullsnaps > 0)
+	{
+	    fullsnap_interval = (int)(N_ITER / n_vsnap);
+	}
+	else
+	{
+		fullsnap_interval = N_ITER+1;
+	}
 
 #ifdef VAC_OSC_ON
     if (!(is_pmo && is_omega && is_theta))

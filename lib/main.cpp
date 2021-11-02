@@ -1,22 +1,26 @@
 /*
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-+                                          COSEnu                                          +
-+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-+ Developed by:                                                                            +
-+                                                                                          +
-+	Chun-Yu Lin                                                                            +
-+        - National Center for High-performance computing,                                 +
-+          National Applied Research Laboratories, Hsinchu Science Park,                   +
-+          Hsinchu City 30076, Taiwan.                                                     +
-+                                                                                          +
-+   Meng-Ru Wu, Manu George and Tony Liu -                                                 +
-+        - Institute of Physics, Academia Sinica, Taipei, 11529, Taiwan.                   +
-+                                                                                          +
-+   Zewei Xiong                                                                            +
-+        - GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1, 64291 Darmstadt  +
-+          Germany.                                                                        +
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++------------------------------------------------------------------------------------------+
+|                                          COSEnu                                          |
++------------------------------------------------------------------------------------------+
+| Contributors:                                                                            |
+|                                                                                          |
+|	Chun-Yu Lin                                                                            |
+|        - National Center for High-performance computing,                                 |
+|          National Applied Research Laboratories, Hsinchu Science Park,                   |
+|          Hsinchu City 30076, Taiwan.                                                     |
+|                                                                                          |
+|   Meng-Ru Wu, Manu George, Tony Liu, Yi-Siou Wu -                                        |
+|        - Institute of Physics, Academia Sinica, Taipei, 11529, Taiwan.                   |
+|                                                                                          |
+|   Zewei Xiong                                                                            |
+|        - GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1, 64291 Darmstadt  |
+|          Germany.                                                                        |
+|                                                                                          |
+|   Kindly direct queries to cosenuproject@gmail.com                                       |
++------------------------------------------------------------------------------------------+
 */
+
+
 // ......................... INCLUDES ......................... //
 
 #include <cstdio>
@@ -55,12 +59,13 @@ using std::string;
 int main(int argc, char *argv[])
 {
 	// ......................... VARIABLES ......................... //
+
 	std::string SCHEME = "";
 	std::string ID = "";
 	std::string CONFIG_FILE = "";
 	bool is_id = false;
 	bool is_conf = false;
-	unsigned int END_TIME;
+	unsigned int N_ITER;
 
 	// ......................... READING COMMANDLINE ARGS ......................... //
 
@@ -92,17 +97,16 @@ int main(int argc, char *argv[])
 				  << "exiting for now." << std::endl;
 		exit(0);
 	}
-	
+
 	// ......................... PARSING CONFIG-FILE ......................... //
-	
+
 	Params pars(CONFIG_FILE);
-	std::cout << pars.SCHEME << "\n";
 
 	// ......................... CREATING STATE ......................... //
 
 	NuOsc state(pars.z0, pars.z1, pars.nz, pars.nvz, pars.CFL, pars.gz, ID, pars.SCHEME);
-	END_TIME = pars.END_TIME;
-	std::cout << std::setw(30) << "END_TIME: " << END_TIME << std::endl;
+	N_ITER = pars.N_ITER;
+	std::cout << std::setw(30) << "NUMBER OFITERATIONS: " << N_ITER << std::endl;
 
 #ifdef VAC_OSC_ON
 	state.set_vac_pars(pars.pmo, pars.omega, pars.theta);
@@ -120,27 +124,17 @@ int main(int argc, char *argv[])
 	FieldVar *v_stat0 = new FieldVar(state.size);
 	state.copy_state(state.v_stat, v_stat0);
 
-
 	//......................... EVALUATING INITIAL STATE .........................//
 
 #ifdef COLL_OSC_ON
 	Pol *P0 = new Pol(state.size);
-	state.cal_pol(state.v_stat, P0); // P0 stores initial polarization.
+	state.cal_pol(state.v_stat, P0); // P0 stores initial values of the components of polarization vector.
 	state.analyse(state.v_stat, P0, 0, 0);
 #endif
 	state.survival_prob(state.v_stat, v_stat0, 0);
 
-	//......................... INITIAL STATE SNAPSHOTS .........................//
+	//............................ SNAPSHOT RLATED ............................//
 
-	// ......................... Domain snapshots .........................//
-	if (pars.n_zsnap > 0)
-	{
-		pars.z_snap_interval = (int)(END_TIME / pars.n_zsnap);
-	}
-	else
-	{
-		pars.z_snap_interval = END_TIME+1;
-	}
 	for (int i = 0; i < pars.zsnap_vmodes.size(); i++)
 	{
 		state.output_zsnap(pars.zsnap_vmodes[i], 0);
@@ -148,31 +142,27 @@ int main(int argc, char *argv[])
 
 	// ......................... Phase-space snapshots ......................... //
 
-	if (pars.n_vsnap > 0)
-	{
-		pars.v_snap_interval = (int)(END_TIME / pars.n_vsnap);
-	}
-	else
-	{
-		pars.v_snap_interval = END_TIME+1;
-	}
-
 	for (int i = 0; i < pars.vsnap_zlocs.size(); i++)
 	{
 		state.output_vsnap(pars.vsnap_zlocs[i], 0);
 	}
 
+	// ........................... Full-snapshot ...............................//
+
+	state.full_snap(state.v_stat, "create");
+
 	// ......................... EVOLVING THE STATE ......................... //
 
-	std::cout << "Running..." << "\n\n";
+	std::cout << "Running..."
+			  << "\n\n";
 
-	for (int t = 1; t < END_TIME; t++)
+	for (int t = 1; t < N_ITER; t++)
 	{
 		state.step_rk4();
 
 		// ...................... Phase-space snapshots ....................... //
 
-		if ((t % pars.v_snap_interval == 0) || (t == END_TIME - 1))
+		if ((t % pars.v_snap_interval == 0) || (t == N_ITER - 1))
 		{
 			for (int i = 0; i < pars.vsnap_zlocs.size(); i++)
 			{
@@ -182,7 +172,7 @@ int main(int argc, char *argv[])
 
 		// ......................... Domain snapshots .........................//
 
-		if ((t % pars.z_snap_interval == 0) || (t == END_TIME - 1))
+		if ((t % pars.z_snap_interval == 0) || (t == N_ITER - 1))
 		{
 			for (int i = 0; i < pars.zsnap_vmodes.size(); i++)
 			{
@@ -190,6 +180,10 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		if ((t % pars.fullsnap_interval) == 0)
+		{
+			state.full_snap(state.v_stat, "app");
+		}
 		// ......................... Analysis ......................... //
 		if (t % pars.ANAL_EVERY == 0)
 		{
@@ -199,17 +193,16 @@ int main(int argc, char *argv[])
 			state.survival_prob(state.v_stat, v_stat0, t);
 		}
 
-		if (t % ((int)(END_TIME) / 10) == 0)
+		if (t % ((int)(N_ITER) / 10) == 0)
 		{
 			std::cout << " " << std::setprecision(4)
-					  << (int)(t * 100.0 / (END_TIME - 1)) << " %"
+					  << (int)(t * 100.0 / (N_ITER - 1)) << " %"
 					  << std::endl;
 		}
 	}
-	
 
 #ifdef COLL_OSC_ON
-	state.dom_averaged_survival_prob(state.v_stat, v_stat0, END_TIME - 1);
+	state.dom_averaged_survival_prob(state.v_stat, v_stat0, N_ITER - 1);
 	delete P0;
 #endif
 	delete v_stat0;
