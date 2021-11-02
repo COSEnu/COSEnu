@@ -207,7 +207,7 @@ def configure(scheme="fv"):
                     'vsnap_zlocs' : config['vsnap_zlocs'],
                     'n_zsnaps' : config['n_zsnaps'],
                     'zsnap_vmodes' : config['zsnap_vmodes'],
-                    'vmode_P' : config['vmode_P'],
+                    # 'vmode_P' : config['vmode_P'],
                 }
 
                 # ID for the job

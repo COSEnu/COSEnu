@@ -3,7 +3,7 @@
 
 # Spatial domain specifics.
 zrange :  [-600, 600]
-nzs    :  [1000, 2000]
+nzs    :  [1000,]
 CFLS   :  [0.4,]
 
 # Phase-space specifics.
@@ -27,7 +27,7 @@ theta : 37 # Vacuum mixing angle in degrees.
 collective_osc_on : True # Options -> True, False
 mu : 1.0 # \sqrt{2} G_F n_{\nu_e}
 
-vmode_P : 1.0 # velocity mode for printing <P_v>
+# vmode_P : 1.0 # velocity mode for printing <P_v>
 
 # ANALYSIS
 nanalyze : 100 # Total number of analysis to be carried out per job.

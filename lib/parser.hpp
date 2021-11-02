@@ -32,8 +32,6 @@ public:
     std::vector<double> zsnap_vmodes;
     int z_snap_interval;
 
-    double vmode_P = 0;
-
     bool is_scheme = false;
     bool is_nz = false;
     bool is_nvz = false;
@@ -160,10 +158,6 @@ Params::Params(std::string CONFIG_FILE)
             {
                 string_to_type(value, mu);
                 is_mu = true;
-            }
-            else if (key == "vmode_P")
-            {
-                string_to_type(value, vmode_P);
             }
 #endif
             else if (key == "n_vsnap")
