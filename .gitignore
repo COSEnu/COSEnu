@@ -3,3 +3,4 @@
 *.ipynb
 lib_bk/*
 *(copy)*
+.vscode
