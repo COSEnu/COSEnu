@@ -1,4 +1,5 @@
 *.dat
 *.txt
 *.ipynb
-lib_bk/
+lib_bk/*
+*(copy)*

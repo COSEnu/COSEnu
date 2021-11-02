@@ -3,7 +3,7 @@
 
 # Spatial domain specifics.
 zrange :  [-600, 600]
-nzs    :  [1000,]
+nzs    :  [1000, 2000]
 CFLS   :  [0.4,]
 
 # Phase-space specifics.
