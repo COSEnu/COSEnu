@@ -9,7 +9,7 @@ void NuOsc::WENO7(const double *in, double *rflux, double *lflux)
             s   -> s = +1 for forward flux, s = -1 for backward flux.
 
         Output: 
-            uul/uur -> Value of the flux at i+1/2 or i-1/2.  
+            uul, uur -> Value of the flux at i+1/2 or i-1/2.  
     */
 
     double eps = 1E-6;
@@ -151,7 +151,7 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
             out->bee[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bee[ij] - flux->rflux->bee[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bee[ij + 1] - flux->lflux->bee[ij]);
             out->bxx[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bxx[ij] - flux->rflux->bxx[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bxx[ij + 1] - flux->lflux->bxx[ij]);
             out->bex_re[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bex_re[ij] - flux->rflux->bex_re[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bex_re[ij + 1] - flux->lflux->bex_re[ij]);
-            out->bex_im[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bex_im[ij] - flux->rflux->bex_im[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bex_im[ij + 1] - flux->lflux->bex_im[ij]);
+            out->bex_im[idx(i, j)] += fac * fabs(1 + s) / 2 * (flux->rflux->bex_im[ij] - flux->rflux->bex_im[ij - 1]) + fac * fabs(1 - s) / 2 * (flux->lflux->bex_im[ij + 1] - flux->lflux->bex_im[ij]);     
 #endif
 
 #ifdef VAC_OSC_ON

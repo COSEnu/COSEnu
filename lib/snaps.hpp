@@ -82,7 +82,6 @@ void NuOsc::output_zsnap(const double vmode, const int t)
         return;
     }
 
-
     z_snap_ofstream << "# Domain snapshot for (vz = " << vz[i] << ", t = " << t << ")" << std::endl;
 
     for (int j = 0; j < nz; j++)
@@ -102,5 +101,49 @@ void NuOsc::output_zsnap(const double vmode, const int t)
                         << std::endl;
     }
     z_snap_ofstream.close();
+}
+/*---------------------------------------------------------------------------*/
+
+void NuOsc::full_snap(const FieldVar *ivstat, std::string mode)
+{
+    std::string full_snap_filename = ID + "_v_stat_snap.dat";
+    std::ofstream vstat_snap_stream;
+    if (mode == "create")
+    {
+        vstat_snap_stream.open(full_snap_filename, std::ofstream::out | std::ofstream::trunc);
+    }
+    else if (mode == "app")
+    {
+        vstat_snap_stream.open(full_snap_filename, std::ofstream::out | std::ofstream::app);
+    }
+    else
+    {
+        std::cout << "Run time err report from snaps.hpp -> void NuOsc::full_snap\n";
+        std::cout << "Unexpected mode: " << mode << " v_stat full snap aborted.\n";
+        return;
+    }
+    if (!vstat_snap_stream)
+    {
+        std::cout << "Run time err report from snaps.hpp -> void NuOsc::full_snap\n";
+        std::cout << "Unable to open " << full_snap_filename << "\n";
+        return;
+    }
+    else
+    {
+        for(int i=0; i<nvz; i++)
+        {
+            for(int j=0; j<nz; j++)
+            {
+                int ij = idx(i, j);
+                vstat_snap_stream << std::fixed << std::setprecision(10) << std::scientific 
+                                << vz[i] << "\t" << Z[j] << "\t" 
+                                << ivstat->ee[ij] << "\t" << ivstat->xx[ij] << "\t" << ivstat->ex_re[ij] << "\t" << ivstat->ex_im[ij] << "\t"
+                                << ivstat->bee[ij] << "\t" << ivstat->bxx[ij] << "\t" << ivstat->bex_re[ij] << "\t" << ivstat->bex_im[ij] << std::endl;
+            }
+            vstat_snap_stream << std::endl;
+        }
+        vstat_snap_stream.close();
+    }
+    return;
 }
 /*---------------------------------------------------------------------------*/

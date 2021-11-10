@@ -1,3 +1,26 @@
+/*
++------------------------------------------------------------------------------------------+
+|                                          COSEnu                                          |
++------------------------------------------------------------------------------------------+
+| Contributors:                                                                            |
+|                                                                                          |
+|	Chun-Yu Lin                                                                            |
+|        - National Center for High-performance computing,                                 |
+|          National Applied Research Laboratories, Hsinchu Science Park,                   |
+|          Hsinchu City 30076, Taiwan.                                                     |
+|                                                                                          |
+|   Meng-Ru Wu, Manu George, Tony Liu, Yi-Siou Wu -                                        |
+|        - Institute of Physics, Academia Sinica, Taipei, 11529, Taiwan.                   |
+|                                                                                          |
+|   Zewei Xiong                                                                            |
+|        - GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1, 64291 Darmstadt  |
+|          Germany.                                                                        |
+|                                                                                          |
+|   Kindly direct queries to cosenuproject@gmail.com                                       |
++------------------------------------------------------------------------------------------+
+*/
+
+
 // ......................... INCLUDES ......................... //
 
 #include <cstdio>
@@ -18,6 +41,7 @@ using std::string;
 #include "presets.hpp"
 #include "structures.hpp"
 #include "miscellaneous_funcs.hpp"
+#include "parser.hpp"
 #include "nuosc.hpp"
 
 #if defined(FD)
@@ -35,74 +59,16 @@ using std::string;
 int main(int argc, char *argv[])
 {
 	// ......................... VARIABLES ......................... //
+
 	std::string SCHEME = "";
 	std::string ID = "";
 	std::string CONFIG_FILE = "";
 	bool is_id = false;
 	bool is_conf = false;
-	bool is_scheme = false;
-
-	std::ifstream config;
-	std::string line;
-	std::string key;
-	std::string value;
-
-	// Simulation specific configs.
-	int END_TIME = 0;
-	int DUMP_EVERY = 0;
-	int ANAL_EVERY = 0;
-
-	// Grid specific configs.
-	int nz = 0;
-	int nvz = 0;
-	int gz = 0;
-
-	double z0 = 0.0;
-	double z1 = 0.0;
-	double v0;
-	double v1;
-	double CFL = 0.0;
-	double sig_nu = 0.0;
-	double sig_anu = 0.0;
-	double alpha = 0.0;
-	double pmo = 0.0;
-	double omega = 0.0;
-	double theta = 0.0;
-	double mu = 1.0;
-
-	//Analysis related
-	int n_vsnap = 0;
-	std::vector<double> vsnap_zlocs;
-	int v_snap_interval;
-
-	int n_zsnap = 0;
-	std::vector<double> zsnap_vmodes;
-	int z_snap_interval;
-
-	double vmode_P = 0;
-
-	// Some flags.
-	bool is_nz = false;
-	bool is_nvz = false;
-	bool is_z0 = false;
-	bool is_z1 = false;
-	bool is_v0 = false;
-	bool is_v1 = false;
-	bool is_CFL = false;
-	bool is_gz = false;
-	bool is_sig_nu = false;
-	bool is_sig_anu = false;
-	bool is_alpha = false;
-	bool is_END_TIME = false;
-	bool is_ANAL_EVERY = false;
-	bool is_pmo = false;
-	bool is_omega = false;
-	bool is_theta = false;
-	bool is_mu = false;
+	unsigned int N_ITER;
 
 	// ......................... READING COMMANDLINE ARGS ......................... //
 
-	// Reading runtime args.
 	for (int i = 1; argv[i] != 0; i++)
 	{
 		if (strcmp(argv[i], "--id") == 0)
@@ -123,7 +89,7 @@ int main(int argc, char *argv[])
 	if (!(is_id && is_conf))
 	{
 		std::cout << "[ FAIL ]..."
-				  << "Both process ID (to label the output files) and configuration should be passed "
+				  << "Both job ID (to label the output files) and configuration should be passed "
 				  << "on runtime." << std::endl
 				  << "Use --id and --conf to specify them." << std::endl
 				  << "eg:(inside condor submit file)" << std::endl
@@ -131,337 +97,121 @@ int main(int argc, char *argv[])
 				  << "exiting for now." << std::endl;
 		exit(0);
 	}
-	config.open(CONFIG_FILE.c_str(), std::ifstream::in);
-	if (!config)
-	{
-		std::cout << "[ FAIL ]...Unable to open "
-				  << CONFIG_FILE
-				  << "exitting for now"
-				  << std::endl;
-		exit(0);
-	}
 
 	// ......................... PARSING CONFIG-FILE ......................... //
-	
-	while (config)
-	{
-		std::getline(config, line);
-		if (line.length() > 0)
-		{
-			int pos = line.find_first_of(":");
-			std::string left = line.substr(0, pos);
-			std::string right = line.substr(pos + 1);
-			if (left.length() > 0)
-			{
-				key = left.substr(0, left.find_first_of(" "));
-				value = right.substr(right.find_first_not_of(" "), right.find_first_of("\n"));
-			}
-			if (key == "scheme")
-			{
-				string_to_type(value, SCHEME);
-				is_scheme = true;
-			}
-			else if (key == "nz")
-			{
-				string_to_type(value, nz);
-				is_nz = true;
-			}
-			else if (key == "nvz")
-			{
-				string_to_type(value, nvz);
-				is_nvz = true;
-			}
-			else if (key == "CFL")
-			{
-				string_to_type(value, CFL);
-				is_CFL = true;
-			}
-			else if (key == "gz")
-			{
-				string_to_type(value, gz);
-				is_gz = true;
-			}
-			else if (key == "z0")
-			{
-				string_to_type(value, z0);
-				is_z0 = true;
-			}
-			else if (key == "z1")
-			{
-				string_to_type(value, z1);
-				is_z1 = true;
-			}
-			else if (key == "v0")
-			{
-				string_to_type(value, v0);
-				is_v0 = true;
-			}
-			else if (key == "v1")
-			{
-				string_to_type(value, v1);
-				is_v1 = true;
-			}
-			else if (key == "END_TIME")
-			{
-				string_to_type(value, END_TIME);
-				is_END_TIME = true;
-			}
-			else if (key == "ANAL_EVERY")
-			{
-				string_to_type(value, ANAL_EVERY);
-				is_ANAL_EVERY = true;
-			}
-#ifdef VAC_OSC_ON
-			else if (key == "pmo")
-			{
-				string_to_type(value, pmo);
-				is_pmo = true;
-			}
-			else if (key == "omega")
-			{
-				string_to_type(value, omega);
-				is_omega = true;
-			}
-			else if (key == "theta")
-			{
-				string_to_type(value, theta);
-				is_theta = true;
-			}
-#endif
-#ifdef COLL_OSC_ON
-			else if (key == "sig_nu")
-			{
-				string_to_type(value, sig_nu);
-				is_sig_nu = true;
-			}
-			else if (key == "sig_anu")
-			{
-				string_to_type(value, sig_anu);
-				is_sig_anu = true;
-			}
-			else if (key == "alpha")
-			{
-				string_to_type(value, alpha);
-				is_alpha = true;
-			}
-			else if (key == "mu")
-			{
-				string_to_type(value, mu);
-				is_mu = true;
-			}
-			else if (key == "vmode_P")
-			{
-				string_to_type(value, vmode_P);
-			}
-#endif
-			else if (key == "n_vsnap")
-			{
-				string_to_type(value, n_vsnap);
-			}
-			else if (key == "vsnap_zlocs")
-			{
-				cssl_to_vec(value, vsnap_zlocs);
-			}
-			else if (key == "n_zsnaps")
-			{
-				string_to_type(value, n_zsnap);
-			}
-			else if (key == "zsnap_vmodes")
-			{
-				cssl_to_vec(value, zsnap_vmodes);
-			}
-			else
-			{
-				std::cout << "Redundant or unknown key: " << key << std::endl;
-				continue;
-			}
-		}
-	}
-	//----------------------------------------------------------
 
-	if (!(is_scheme && is_nz && is_nvz && is_z0 && is_z1 && is_v0 && is_v1 && is_CFL && is_gz &&
-		  is_END_TIME && is_ANAL_EVERY))
-	{
-		std::cout << "[ FAIL ]...Incomplete config file" << std::endl
-				  << "Exiting." << std::endl;
-		exit(0);
-	}
-
-#ifdef VAC_OSC_ON
-	if (!(is_pmo && is_omega && is_theta))
-	{
-		std::cout << "[ FAIL ]...Incomplete config file" << std::endl
-				  << "Exiting." << std::endl;
-		exit(0);
-	}
-#endif
-#ifdef COLL_OSC_ON
-	if (!(is_sig_nu && is_sig_anu && is_mu && is_alpha))
-	{
-		std::cout << "[ FAIL ]...Incomplete config file" << std::endl
-				  << "Exiting." << std::endl;
-		exit(0);
-	}
-#endif
+	Params pars(CONFIG_FILE);
 
 	// ......................... CREATING STATE ......................... //
 
-	NuOsc state(z0, z1, nz, nvz, CFL, gz, ID, SCHEME);
-	std::cout << std::setw(30) << "END_TIME: " << END_TIME << std::endl;
+	NuOsc state(pars.z0, pars.z1, pars.nz, pars.nvz, pars.CFL, pars.gz, ID, pars.SCHEME);
+	N_ITER = pars.N_ITER;
+	std::cout << std::setw(30) << "NUMBER OFITERATIONS: " << N_ITER << std::endl;
 
 #ifdef VAC_OSC_ON
-	state.set_vac_pars(pmo, omega, theta);
+	state.set_vac_pars(pars.pmo, pars.omega, pars.theta);
 #endif
 #ifdef COLL_OSC_ON
-	state.set_collective_pars(mu, sig_nu, sig_anu, alpha);
+	state.set_collective_pars(pars.mu);
 #endif
 
 	//......................... INITIALIZING STATE ......................... //
 
 	state.initialize();
+
+	//................... MAKING COPYOF THE INITIAL STATE .................. //
+
 	FieldVar *v_stat0 = new FieldVar(state.size);
-
-	//........................ COPYING INITIAL STATE ....................... //
-
 	state.copy_state(state.v_stat, v_stat0);
-
-	//......................... OUTPUT FILE STREAMS .........................//
-
-	std::ofstream surv_prob_ofstream;
-	std::string surv_prob_fname = ID + "_survival_prob.dat";
-	surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
-	if (!surv_prob_ofstream)
-	{
-		std::cout << "Unable to open " << surv_prob_fname << std::endl;
-	}
-	else
-	{
-		surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
-	}
-
-#ifdef COLL_OSC_ON
-	std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
-	std::string conserved_fname = ID + "_conserved_quantities.dat";
-
-	con_qty_ofstream.open(conserved_fname, std::ofstream::out | std::ofstream::trunc);
-	if (!con_qty_ofstream)
-	{
-		std::cout << "Unable to open " << conserved_fname << std::endl;
-	}
-	else
-	{
-		con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t, v="
-						 << std::to_string(vmode_P) << "), |M0|]" << std::endl;
-	}
-#endif
 
 	//......................... EVALUATING INITIAL STATE .........................//
 
 #ifdef COLL_OSC_ON
 	Pol *P0 = new Pol(state.size);
-	state.cal_P(state.v_stat, P0); // P0 stores initial polarization.
-	state.analyse(state.v_stat, P0, con_qty_ofstream, 0, 0);
+	state.cal_pol(state.v_stat, P0); // P0 stores initial values of the components of polarization vector.
+	state.analyse(state.v_stat, P0, 0, 0);
 #endif
-	state.survival_prob(state.v_stat, v_stat0, surv_prob_ofstream, 0);
+	state.survival_prob(state.v_stat, v_stat0, 0);
 
-	//......................... INITIAL STATE SNAPSHOTS .........................//
+	//............................ SNAPSHOT RLATED ............................//
 
-	// ......................... Domain snapshots .........................//
-	int t_zsnap = 0;
-	if (n_zsnap > 0)
+	for (int i = 0; i < pars.zsnap_vmodes.size(); i++)
 	{
-		z_snap_interval = (int)(END_TIME / n_zsnap);
+		state.output_zsnap(pars.zsnap_vmodes[i], 0);
 	}
-	else
-	{
-		z_snap_interval = 0;
-	}
-	for (int i = 0; i < zsnap_vmodes.size(); i++)
-	{
-		state.output_zsnap(zsnap_vmodes[i], t_zsnap);
-	}
-	t_zsnap += z_snap_interval;
 
 	// ......................... Phase-space snapshots ......................... //
 
-	int t_vsnap = 0;
-	if (n_vsnap > 0)
+	for (int i = 0; i < pars.vsnap_zlocs.size(); i++)
 	{
-		v_snap_interval = (int)(END_TIME / n_vsnap);
-	}
-	else
-	{
-		v_snap_interval = 0;
+		state.output_vsnap(pars.vsnap_zlocs[i], 0);
 	}
 
-	for (int i = 0; i < vsnap_zlocs.size(); i++)
-	{
-		state.output_vsnap(vsnap_zlocs[i], t_vsnap);
-	}
-	t_vsnap += v_snap_interval;
+	// ........................... Full-snapshot ...............................//
+
+	state.full_snap(state.v_stat, "create");
 
 	// ......................... EVOLVING THE STATE ......................... //
-	std::cout << "Running..." << std::endl
-			  << std::endl;
-	for (int t = 1; t < END_TIME; t++)
+
+	std::cout << "Running..."
+			  << "\n\n";
+
+	for (int t = 1; t < N_ITER; t++)
 	{
 		state.step_rk4();
 
-		// ......................... Phase-space snapshots ......................... //
+		// ...................... Phase-space snapshots ....................... //
 
-		if ((t == t_vsnap) || (t == END_TIME - 1))
+		if ((t % pars.v_snap_interval == 0) || (t == N_ITER - 1))
 		{
-			for (int i = 0; i < vsnap_zlocs.size(); i++)
+			for (int i = 0; i < pars.vsnap_zlocs.size(); i++)
 			{
-				state.output_vsnap(vsnap_zlocs[i], t);
+				state.output_vsnap(pars.vsnap_zlocs[i], t);
 			}
-			t_vsnap += v_snap_interval;
 		}
 
 		// ......................... Domain snapshots .........................//
 
-		if ((t == t_zsnap) || (t == END_TIME - 1))
+		if ((t % pars.z_snap_interval == 0) || (t == N_ITER - 1))
 		{
-			for (int i = 0; i < zsnap_vmodes.size(); i++)
+			for (int i = 0; i < pars.zsnap_vmodes.size(); i++)
 			{
-				state.output_zsnap(zsnap_vmodes[i], t);
+				state.output_zsnap(pars.zsnap_vmodes[i], t);
 			}
-			t_zsnap += z_snap_interval;
 		}
 
+		if ((t % pars.fullsnap_interval) == 0)
+		{
+			state.full_snap(state.v_stat, "app");
+		}
 		// ......................... Analysis ......................... //
-		if (t % ANAL_EVERY == 0)
+		if (t % pars.ANAL_EVERY == 0)
 		{
 #ifdef COLL_OSC_ON
-			state.analyse(state.v_stat, P0, con_qty_ofstream, 0, t);
+			state.analyse(state.v_stat, P0, 0, t);
 #endif
-			state.survival_prob(state.v_stat, v_stat0, surv_prob_ofstream, t);
+			state.survival_prob(state.v_stat, v_stat0, t);
 		}
 
-		if (t % ((int)(END_TIME) / 10) == 0)
+		if (t % ((int)(N_ITER) / 10) == 0)
 		{
 			std::cout << " " << std::setprecision(4)
-					  << (int)(t * 100.0 / (END_TIME - 1)) << " %"
+					  << (int)(t * 100.0 / (N_ITER - 1)) << " %"
 					  << std::endl;
 		}
 	}
-	std::cout << " 100 %" << std::endl;
-	std::cout << std::endl;
 
 #ifdef COLL_OSC_ON
-	state.dom_averaged_survival_prob(state.v_stat, v_stat0, END_TIME - 1);
+	state.dom_averaged_survival_prob(state.v_stat, v_stat0, N_ITER - 1);
+	delete P0;
 #endif
+	delete v_stat0;
 
-#ifdef COLL_OSC_ON
-	con_qty_ofstream.close();
-	surv_prob_ofstream.close();
-#endif
-	surv_prob_ofstream.close();
-
-	std::cout << "SIMULATION COMPLETED"
+	std::cout << " 100 %" << std::endl
+			  << std::endl
+			  << "SIMULATION COMPLETED"
 			  << std::endl;
 
-	delete v_stat0;
 	return (0);
 }
 

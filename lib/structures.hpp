@@ -104,15 +104,15 @@ struct M{
 
 /*---------------------------------------------------------------------------*/
 
-struct Params{
-    unsigned int nz ;
-    unsigned int nvz;
-    unsigned int gz ;
-    double    z0, z1;
-    double CFL;
-    Params(){}
-    ~Params(){}
-};
+// struct Params{
+//     unsigned int nz ;
+//     unsigned int nvz;
+//     unsigned int gz ;
+//     double    z0, z1;
+//     double CFL;
+//     Params(){}
+//     ~Params(){}
+// };
 
 /*---------------------------------------------------------------------------*/
 
