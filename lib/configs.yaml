@@ -3,7 +3,7 @@
 
 # Spatial domain specifics.
 zrange :  [-600, 600]
-nzs    :  [1000,]
+nzs    :  [1000, 2000]
 CFLS   :  [0.4,]
 
 # Phase-space specifics.
@@ -13,14 +13,14 @@ nvzs   :  [50,]
 
 # Number of iterations = int(end_time/dt)
 # dt = CFL*dz
-end_time  : 1200
+end_time  : 100
 
 # Switch on/off advection.
 advection_off : False # Options -> True, False
 
 # Switch on/off vacuum oscillation
 vac_osc_on : False # options -> True, False
-pmo : 1.0 # 1.0 -> normal mass ordering, -1.0 -> inverted mass ordering, 0.0 -> no vacuum term.
+pmo   : 1.0 # 1.0 -> normal mass ordering, -1.0 -> inverted mass ordering, 0.0 -> no vacuum term.
 omega : 1.0 # \Dedlta m^2/2E.
 theta : 37 # Vacuum mixing angle in degrees.
 
@@ -36,12 +36,12 @@ nanalyze : 100 # Total number of analysis to be carried out per job.
 nfullsnaps : 3
 
 # To capture the evolution of the field variables for all th velocity modes at given locations.
-n_vsnap : 5 # snapshot of phase-space at vsnap_zlocs
+n_vsnap     : 5 # snapshot of phase-space at vsnap_zlocs
 vsnap_zlocs : [-300, 0, 300] # z-locations for phsse-space snapshots.
 
 # To capture the evolution of the field variables for given modes over the entire domain.
-n_zsnaps : 5 # snapshot of entire domain for the v_modes at zsnap_vmodes
-             # between time = 0 and time = end_time
+n_zsnaps     : 5 # snapshot of entire domain for the v_modes at zsnap_vmodes
+                 # between time = 0 and time = end_time
 zsnap_vmodes : [-1, -0.5, 0.5, 1] # v-modes for full spatial domain snapshots. 
 
 # Folder names

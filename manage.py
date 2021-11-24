@@ -65,7 +65,8 @@ jobs_list_file = "jobs_list.txt"
 job_config_file = ""
 
 # For submitting with condor
-job_submit_src_file = os.path.join(resources_dir, "job.submit")
+condor_conf = os.path.join(resources_dir, "condor.conf")
+
 
 presets_file = os.path.join(resources_dir, presets_filename)
 
@@ -228,7 +229,7 @@ def configure(scheme="fv"):
 
     job_config_file = os.path.join(scheme_dir, jobs_list_file)
     export_job_configs(config_list, job_config_file)
-    shutil.copy(job_submit_src_file, scheme_dir)
+    shutil.copy(condor_conf, scheme_dir)
 
     os.chdir(proj_dir)
 
@@ -272,7 +273,7 @@ def initialize(scheme):
 
 # --------------------------------------------------------------------------------------------------
 
-
+# For submitting with condor
 def submit_with_condor(scheme):
     print(
         f'[ START ]...Identifying the scheme directory from {batch_configs_file}.')
@@ -296,13 +297,13 @@ def submit_with_condor(scheme):
         sys.exit()
 
     for item in submit_jobs_list:
-        id, config_file = item[0], item[1]
+        id, _ = item[0], item[1]
         model_dir = os.path.join(scheme_dir, id)
 
         try:
             pwd = os.getcwd()
             os.chdir(model_dir)
-            shutil.copy(job_submit_src_file, os.path.join(
+            shutil.copy(condor_conf, os.path.join(
                 model_dir, 'job.submit'))
             shutil.copy(os.path.join(scheme_dir, TARGET),
                         os.path.join(model_dir, TARGET))
@@ -312,6 +313,61 @@ def submit_with_condor(scheme):
                 f.write(f"{id},job.config")
 
             os.system(f"condor_submit job.submit")
+            os.chdir(pwd)
+
+        except FileNotFoundError:
+            print(f'[ FAIL ]...unable to locate {model_dir}. Exiting')
+            sys.exit()
+
+    os.chdir(scheme_dir)
+   
+
+# --------------------------------------------------------------------------------------------------
+
+# For submitting with slurm
+def submit_with_slurm(scheme):
+    slurm_conf = os.path.join(resources_dir, "slurm.conf")
+    print(slurm_conf)
+
+    print(f'[ START ]...Identifying the scheme directory from {batch_configs_file}.')
+
+    with open(batch_configs_file) as f:
+        require = yaml.load(f, Loader=yaml.FullLoader)
+        scheme_dir = os.path.join(proj_dir, require[f'folder_{scheme}'])
+
+    print(f'[ FINISHED ]...Scheme directory identified to be {scheme_dir}')
+    print(f'[ OK ]...Submitting')
+
+    try:
+        os.chdir(scheme_dir)
+        job_config_file = os.path.join(scheme_dir, jobs_list_file)
+        submit_jobs_list = []
+        with open(job_config_file, 'r') as f:
+            for line in f.readlines():
+                submit_jobs_list.append(line.strip("\n").split(","))
+    except FileNotFoundError:
+        print(f'[ FAIL ]...unable to locate {scheme_dir}. Exiting')
+        sys.exit()
+
+    for item in submit_jobs_list:
+        id, config_file = item[0], item[1]
+        model_dir = os.path.join(scheme_dir, id)
+
+        try:
+            pwd = os.getcwd()
+            os.chdir(model_dir)
+            shutil.copy(os.path.join(scheme_dir, TARGET),
+                        os.path.join(model_dir, TARGET))
+
+            slurm_sh = os.path.join(model_dir, f"sbatch.sh")
+
+            with open(slurm_sh, 'w') as fslurm_sh:
+                with open(slurm_conf, 'r') as fslurm_conf:
+                    for line in fslurm_conf.readlines():
+                        fslurm_sh.write(line)
+                fslurm_sh.write(f"srun -p a100 ./{TARGET} --id {id} --conf job.config")
+
+            os.system(f"sbatch {slurm_sh}")
             os.chdir(pwd)
 
         except FileNotFoundError:
@@ -379,26 +435,28 @@ def submit_to_local_machine(scheme):
 
 # --------------------------------------------------------------------------------------------------
 
-
 if __name__ == "__main__":
 
     available_options = """
-	[ --in ] : (Initialize = Configure and compile)  the jobs.
-	[ --ls ] : Run the initialize jobs on local machine.
-	[ --cs ] : Submit the initialized jobs to the cluster.
+        [ --in ] : (Initialize = Configure and compile)  the jobs.
+        [ --ls ] : Run the initialize jobs on local machine.
+        [ --cs ] : Submit the initialized jobs to the condor.
+        [ --ss ] : Submit the initialized jobs to the slrum.
 	"""
 
     sample_templates = """
-	To initialize finite volume scheme     : $ python manage.py --in fv 
-	To initialize finite difference scheme : $ python manage.py --in fd
-	To run the initialized jobs locally    : $ python manage.py --ls fd(or fv)
-	To submit to the cluster using condor  : $ python manage.py --cs fd(or fv) 
+        Initialize finite volume scheme     : $ python manage.py --in fv 
+        Initialize finite difference scheme : $ python manage.py --in fd
+        Run the initialized jobs locally    : $ python manage.py --ls fd(or fv)
+        Submit to the using condor          : $ python manage.py --cs fd(or fv) 
+        Submit to the using slrum           : $ python manage.py --ss fd(or fv) 
 	"""
 
     PWD = os.getcwd()
     init_scheme = None  # Scheme to be compiled and configured
     cluster_sub_scheme = None
     local_run_scheme = None
+    slurm_sub_scheme = None
 
     if len(sys.argv) > 1:
         for i in range(1, len(sys.argv)):
@@ -411,8 +469,17 @@ if __name__ == "__main__":
             elif sys.argv[i] == '--ls':
                 local_run_scheme = sys.argv[i+1]
                 i += 1
+            elif sys.argv[i] == '--ss':
+                slurm_sub_scheme = sys.argv[i+1]
+                i += 1
+            elif sys.argv[i] == "--help":
+                print(f"Available opts: \n {available_options}\n\n")
+                print(f"Eg.: {sample_templates}\n")
+                exit(0)
 
-    if init_scheme == None and cluster_sub_scheme == None and local_run_scheme == None:
+            
+
+    if init_scheme == None and cluster_sub_scheme == None and local_run_scheme == None and slurm_sub_scheme == None:
         print(f'[ JOBLESS ]...Asked to do nothing. Exiting.')
         print(f"Suggestions:")
         print(f"you have the following options: \n {available_options}")
@@ -449,6 +516,22 @@ if __name__ == "__main__":
         else:
             print(
                 f"[ FAIL ]...Unrecognized input {cluster_sub_scheme} after --cs")
+            print(
+                f"Try using from the following templates: \n {sample_templates}")
+            os.chdir(PWD)
+            sys.exit()
+
+    """
+	Submiting the initialized jobs to slurm.
+	"""
+    if slurm_sub_scheme != None:
+        if slurm_sub_scheme == "fv" or slurm_sub_scheme == "fd":
+            pwd = os.getcwd()
+            submit_with_slurm(slurm_sub_scheme)
+            os.chdir(pwd)
+        else:
+            print(
+                f"[ FAIL ]...Unrecognized input {slurm_sub_scheme} after --ss")
             print(
                 f"Try using from the following templates: \n {sample_templates}")
             os.chdir(PWD)
