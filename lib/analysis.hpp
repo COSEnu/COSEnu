@@ -1,19 +1,7 @@
-void NuOsc::analyse(const FieldVar *ivstate, const Pol *iP0, uint n, uint t)
+void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
 {
-    /****************************************************************************************/
-    /* Subroutine to check the deviation of conserved quantities.                           */
-    /*                                                                                      */
-    /* (1)---                                                                               */
-    /*   Estimate maximal deviation of polarization,max(ep_i) for all ep_i belongs to       */
-    /*   {P(z_j, v_i) - P0(z_j, v_i)}, i:0->nvz, j:0->nz.                                   */
-    /*                                                                                      */
-    /* (2)---                                                                               */
-    /*   Evaluate M_0                                                                       */
-    /****************************************************************************************/
-
     std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
     std::string con_qty_fname = ID + "_conserved_quantities.dat";
-
     if (t == 0)
     {
         con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::trunc);
@@ -30,46 +18,65 @@ void NuOsc::analyse(const FieldVar *ivstate, const Pol *iP0, uint n, uint t)
     else
     {
         if (t == 0)
+        {
             con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t), |M0|]\n";
-
-        Pol *P = new Pol(size);
-        M *M0 = new M(0);
-
-        cal_pol(ivstate, P); // Calculating the components of polarization.
-        cal_Mn(M0, P, 0);    // Calculating the components of M_0
-
-        double dP   = 0.0;
-        double dbP  = 0.0;
+        }
+        double dP = 0.0;
+        double dbP = 0.0;
         double Nee0 = 0.0;
         double Nbee0 = 0.0;
-        double avdP  = 0.0;
+        double avdP = 0.0;
         double avbdP = 0.0;
 
         for (int i = 0; i < nvz; i++)
         {
             for (int j = 0; j < nz; j++)
             {
-                dP = (dP >= fabs(P->normP[idx(i, j)] - iP0->normP[idx(i, j)])) ? dP : fabs(P->normP[idx(i, j)] - iP0->normP[idx(i, j)]);
-                dbP = (dbP >= fabs(P->normbP[idx(i, j)] - iP0->normbP[idx(i, j)])) ? dbP : fabs(P->normbP[idx(i, j)] - iP0->normbP[idx(i, j)]);
+                int ij = idx(i, j);
 
-                avdP += fabs(P->normP[idx(i, j)] - iP0->normP[idx(i, j)]) * G0->G[idx(i, j)] * dz * dv;
-                avbdP += fabs(P->normbP[idx(i, j)] - iP0->normbP[idx(i, j)]) * G0->bG[idx(i, j)] * dz * dv;
+                dP = (dP >= fabs(P->normP[ij] - P0->normP[ij])) ? dP : fabs(P->normP[ij] - P0->normP[ij]);
+                dbP = (dbP >= fabs(P->normbP[ij] - P0->normbP[ij])) ? dbP : fabs(P->normbP[ij] - P0->normbP[ij]);
 
-                Nee0 += G0->G[idx(i, j)] * dz * dv;
-                Nbee0 += G0->bG[idx(i, j)] * dz * dv;
+                avdP += fabs(P->normP[ij] - P0->normP[ij]) * G0->G[ij];
+                avbdP += fabs(P->normbP[ij] - P0->normbP[ij]) * G0->bG[ij];
+
+                Nee0 += G0->G[ij];
+                Nbee0 += G0->bG[ij];
             }
         }
-
         con_qty_ofstream << t << "\t"
                          << std::scientific
                          << ((dP >= dbP) ? dP : dbP) << "\t"
                          << avdP / Nee0 << "\t"
                          << avbdP / Nbee0 << "\t"
-                         << M0->norm << endl;
-        delete P;
-        delete M0;
+                         << M_0->norm << endl;
+
         con_qty_ofstream.close();
     }
+}
+
+void NuOsc::analyse(const FieldVar *ivstate, const Pol *P0, uint n, uint t)
+{
+    /****************************************************************************************/
+    /* Subroutine to check the deviation of conserved quantities.                           */
+    /*                                                                                      */
+    /* (1)---                                                                               */
+    /*   Estimate maximal deviation of polarization,max(ep_i) for all ep_i belongs to       */
+    /*   {P(z_j, v_i) - P0(z_j, v_i)}, i:0->nvz, j:0->nz.                                   */
+    /*                                                                                      */
+    /* (2)---                                                                               */
+    /*   Evaluate M_0                                                                       */
+    /****************************************************************************************/
+    Pol *P = new Pol(size);
+    M *M_0 = new M(0);
+
+    cal_pol(ivstate, P); // Calculating the components of polarization.
+    cal_Mn(M_0, P, 0);    // Calculating the components of M_0
+
+    dcon(P, P0, M_0, t);
+
+    delete P;
+    delete M_0;
 }
 
 void NuOsc::cal_pol(const FieldVar *inField, Pol *inP)

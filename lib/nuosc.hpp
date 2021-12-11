@@ -147,6 +147,7 @@ public:
     // Edit these functions as per the requirement.
     void cal_pol(const FieldVar *, Pol *);
     void cal_Mn(M *, const Pol *, unsigned int);
+    void dcon(const Pol*, const Pol*, M*, int);
     void analyse(const FieldVar *, const Pol *, uint, uint);
     void survival_prob(const FieldVar *, const FieldVar *, const uint );
     void dom_averaged_survival_prob(const FieldVar *, const FieldVar *, const uint );
