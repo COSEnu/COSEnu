@@ -1,19 +1,26 @@
 
 # CONFIGURATIONS FOR THE SIMULATION.
+#----------------------------------------------------------------#
 
 # Spatial domain specifics.
 zrange :  [-600, 600]
 nzs    :  [1000, 2000]
 CFLS   :  [0.4,]
 
+#----------------------------------------------------------------#
+
 # Phase-space specifics.
 v0     : -1.0
 v1     :  1.0
 nvzs   :  [50,]
 
+#----------------------------------------------------------------#
+
 # Number of iterations = int(end_time/dt)
 # dt = CFL*dz
 end_time  : 100
+
+#----------------------------------------------------------------#
 
 # Switch on/off advection.
 advection_off : False # Options -> True, False
@@ -29,21 +36,27 @@ collective_osc_on : True # Options -> True, False
 mu : 1.0 # \sqrt{2} G_F n_{\nu_e}
 
 # ANALYSIS
+#----------------------------------------------------------------#
+
 # To analyze the behaviour of the conserved quantities.
-nanalyze : 100 # Total number of analysis to be carried out per job.
+n_analyze : 100 # Total number of analysis to be carried out per job.
 
 # To capture the evolution of the field variables for all the velocities over entire domain.
-nfullsnaps : 3
+n_fullsnap : 3
 
 # To capture the evolution of the field variables for all th velocity modes at given locations.
 n_vsnap     : 5 # snapshot of phase-space at vsnap_zlocs
-vsnap_zlocs : [-300, 0, 300] # z-locations for phsse-space snapshots.
+vsnap_z : [-300, 0, 300] # z-locations for phsse-space snapshots.
 
 # To capture the evolution of the field variables for given modes over the entire domain.
-n_zsnaps     : 5 # snapshot of entire domain for the v_modes at zsnap_vmodes
+n_zsnap     : 5 # snapshot of entire domain for the v_modes at zsnap_vmodes
                  # between time = 0 and time = end_time
-zsnap_vmodes : [-1, -0.5, 0.5, 1] # v-modes for full spatial domain snapshots. 
+zsnap_v : [-1, -0.5, 0.5, 1] # v-modes for full spatial domain snapshots.
+
+#----------------------------------------------------------------#
 
 # Folder names
 folder_fv : "outputs-from-fv"
 folder_fd : "outputs-from-fd"
+
+#----------------------------------------------------------------#

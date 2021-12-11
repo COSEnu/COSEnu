@@ -24,15 +24,15 @@ public:
     double mu = 1.0;
 
     //Analysis related
-    int nfullsnaps = 0;
+    int n_fullsnap = 0;
     int fullsnap_interval = 0;
 
     int n_vsnap = 0;
-    std::vector<double> vsnap_zlocs;
+    std::vector<double> vsnap_z;
     int v_snap_interval;
 
     int n_zsnap = 0;
-    std::vector<double> zsnap_vmodes;
+    std::vector<double> zsnap_v;
     int z_snap_interval;
 
     bool is_scheme = false;
@@ -163,25 +163,25 @@ Params::Params(std::string CONFIG_FILE)
                 is_mu = true;
             }
 #endif
-            else if (key == "nfullsnaps")
+            else if (key == "n_fullsnap")
             {
-                string_to_type(value, nfullsnaps);
+                string_to_type(value, n_fullsnap);
             }
             else if (key == "n_vsnap")
             {
                 string_to_type(value, n_vsnap);
             }
-            else if (key == "vsnap_zlocs")
+            else if (key == "vsnap_z")
             {
-                cssl_to_vec(value, vsnap_zlocs);
+                cssl_to_vec(value, vsnap_z);
             }
-            else if (key == "n_zsnaps")
+            else if (key == "n_zsnap")
             {
                 string_to_type(value, n_zsnap);
             }
-            else if (key == "zsnap_vmodes")
+            else if (key == "zsnap_v")
             {
-                cssl_to_vec(value, zsnap_vmodes);
+                cssl_to_vec(value, zsnap_v);
             }
             else
             {
@@ -221,7 +221,7 @@ Params::Params(std::string CONFIG_FILE)
 	}
 
     // Full snapshots
-    if ( nfullsnaps > 0)
+    if ( n_fullsnap > 0)
 	{
 	    fullsnap_interval = (int)(N_ITER / n_vsnap);
 	}

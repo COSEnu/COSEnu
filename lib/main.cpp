@@ -135,16 +135,16 @@ int main(int argc, char *argv[])
 
 	//............................ SNAPSHOT RLATED ............................//
 
-	for (int i = 0; i < pars.zsnap_vmodes.size(); i++)
+	for (int i = 0; i < pars.zsnap_v.size(); i++)
 	{
-		state.output_zsnap(pars.zsnap_vmodes[i], 0);
+		state.output_zsnap(pars.zsnap_v[i], 0);
 	}
 
 	// ......................... Phase-space snapshots ......................... //
 
-	for (int i = 0; i < pars.vsnap_zlocs.size(); i++)
+	for (int i = 0; i < pars.vsnap_z.size(); i++)
 	{
-		state.output_vsnap(pars.vsnap_zlocs[i], 0);
+		state.output_vsnap(pars.vsnap_z[i], 0);
 	}
 
 	// ........................... Full-snapshot ...............................//
@@ -164,9 +164,9 @@ int main(int argc, char *argv[])
 
 		if ((t % pars.v_snap_interval == 0) || (t == N_ITER - 1))
 		{
-			for (int i = 0; i < pars.vsnap_zlocs.size(); i++)
+			for (int i = 0; i < pars.vsnap_z.size(); i++)
 			{
-				state.output_vsnap(pars.vsnap_zlocs[i], t);
+				state.output_vsnap(pars.vsnap_z[i], t);
 			}
 		}
 
@@ -174,9 +174,9 @@ int main(int argc, char *argv[])
 
 		if ((t % pars.z_snap_interval == 0) || (t == N_ITER - 1))
 		{
-			for (int i = 0; i < pars.zsnap_vmodes.size(); i++)
+			for (int i = 0; i < pars.zsnap_v.size(); i++)
 			{
-				state.output_zsnap(pars.zsnap_vmodes[i], t);
+				state.output_zsnap(pars.zsnap_v[i], t);
 			}
 		}
 

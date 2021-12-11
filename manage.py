@@ -105,7 +105,7 @@ def configure(scheme="fv"):
     v0 = config["v0"]
     v1 = config["v1"]
     end_time = config["end_time"]
-    nanalyze = config["nanalyze"]
+    nanalyze = config["n_analyze"]
     scheme_dir = os.path.join(proj_dir,  config[f'folder_{scheme}'])
 
     with open(presets_file, "w") as presets:
@@ -200,11 +200,11 @@ def configure(scheme="fv"):
                     'omega': config['omega'],
                     'theta': config['theta'],
                     'mu': config['mu'],
-                    'nfullsnaps' : config['nfullsnaps'],
-                    'n_vsnap' : config['n_vsnap'],
-                    'vsnap_zlocs' : config['vsnap_zlocs'],
-                    'n_zsnaps' : config['n_zsnaps'],
-                    'zsnap_vmodes' : config['zsnap_vmodes'],
+                    'n_fullsnap' : config['n_fullsnap'],
+                    'n_vsnap'  : config['n_vsnap'],
+                    'vsnap_z'  : config['vsnap_z'],
+                    'n_zsnap'  : config['n_zsnap'],
+                    'zsnap_v'  : config['zsnap_v'],
                 }
 
                 # ID for the job
