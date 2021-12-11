@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	state.cal_pol(state.v_stat, P0); // P0 stores initial values of the components of polarization vector.
 	state.analyse(state.v_stat, P0, 0, 0);
 #endif
-	state.survival_prob(state.v_stat, v_stat0, 0);
+	state.surv_prob(state.v_stat, v_stat0, 0);
 
 	//............................ SNAPSHOT RLATED ............................//
 
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 #ifdef COLL_OSC_ON
 			state.analyse(state.v_stat, P0, 0, t);
 #endif
-			state.survival_prob(state.v_stat, v_stat0, t);
+			state.surv_prob(state.v_stat, v_stat0, t);
 		}
 
 		if (t % ((int)(N_ITER) / 10) == 0)
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 	}
 
 #ifdef COLL_OSC_ON
-	state.dom_averaged_survival_prob(state.v_stat, v_stat0, N_ITER - 1);
+	state.v_distr_of_surv_prob(state.v_stat, v_stat0, N_ITER - 1);
 	delete P0;
 #endif
 	delete v_stat0;

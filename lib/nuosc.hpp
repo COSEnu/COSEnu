@@ -149,9 +149,28 @@ public:
     void cal_Mn(M *, const Pol *, unsigned int);
     void dcon(const Pol*, const Pol*, M*, int);
     void analyse(const FieldVar *, const Pol *, uint, uint);
-    void survival_prob(const FieldVar *, const FieldVar *, const uint );
-    void dom_averaged_survival_prob(const FieldVar *, const FieldVar *, const uint );
+    void surv_prob(const FieldVar *, const FieldVar *, const uint );
+    void v_distr_of_surv_prob(const FieldVar *, const FieldVar *, const uint );
 };
+
+void NuOsc::copy_state(const FieldVar *ivstate, FieldVar *cpvstate)
+{
+    for (int i = 0; i < nvz; i++)
+    {
+        for (int j = 0; j < nz; j++)
+        {
+            cpvstate->ee[idx(i, j)]    = ivstate->ee[idx(i, j)];
+            cpvstate->xx[idx(i, j)]    = ivstate->xx[idx(i, j)];
+            cpvstate->ex_re[idx(i, j)] = ivstate->ex_re[idx(i, j)];
+            cpvstate->ex_im[idx(i, j)] = ivstate->ex_im[idx(i, j)];
+
+            cpvstate->bee[idx(i, j)]    = ivstate->bee[idx(i, j)];
+            cpvstate->bxx[idx(i, j)]    = ivstate->bxx[idx(i, j)];
+            cpvstate->bex_re[idx(i, j)] = ivstate->bex_re[idx(i, j)];
+            cpvstate->bex_im[idx(i, j)] = ivstate->bex_im[idx(i, j)];
+        }
+    }
+}
 
 void NuOsc::updateBufferZone(FieldVar *in)
 {

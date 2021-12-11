@@ -64,6 +64,8 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
     inMn->norm = sqrt(pow(inMn->e1, 2) + pow(inMn->e2, 2) + pow(inMn->e3, 2));
 }
 
+/*---------------------------------------------------------------------------*/
+
 void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
 {
     std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
@@ -87,11 +89,11 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
         {
             con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t), |M0|]\n";
         }
-        double dP = 0.0;
-        double dbP = 0.0;
-        double Nee0 = 0.0;
+        double dP    = 0.0;
+        double dbP   = 0.0;
+        double Nee0  = 0.0;
         double Nbee0 = 0.0;
-        double avdP = 0.0;
+        double avdP  = 0.0;
         double avbdP = 0.0;
 
         for (int i = 0; i < nvz; i++)
@@ -100,13 +102,13 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
             {
                 int ij = idx(i, j);
 
-                dP = (dP >= fabs(P->normP[ij] - P0->normP[ij])) ? dP : fabs(P->normP[ij] - P0->normP[ij]);
+                dP  = (dP >= fabs(P->normP[ij] - P0->normP[ij])) ? dP : fabs(P->normP[ij] - P0->normP[ij]);
                 dbP = (dbP >= fabs(P->normbP[ij] - P0->normbP[ij])) ? dbP : fabs(P->normbP[ij] - P0->normbP[ij]);
 
-                avdP += fabs(P->normP[ij] - P0->normP[ij]) * G0->G[ij];
+                avdP  += fabs(P->normP[ij] - P0->normP[ij]) * G0->G[ij];
                 avbdP += fabs(P->normbP[ij] - P0->normbP[ij]) * G0->bG[ij];
 
-                Nee0 += G0->G[ij];
+                Nee0  += G0->G[ij];
                 Nbee0 += G0->bG[ij];
             }
         }
@@ -123,7 +125,7 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::survival_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
+void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
 {
     /*
         Total survival probabilities of \nu and \bar\nu.
@@ -148,19 +150,18 @@ void NuOsc::survival_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uin
     {
         surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
     }
-    double num_Pee = 0;
-    double num_Pbee = 0;
-
-    double dnom_Pee = 0;
+    double num_Pee   = 0;
+    double num_Pbee  = 0;
+    double dnom_Pee  = 0;
     double dnom_Pbee = 0;
 
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < nz; j++)
         {
-            num_Pee += ivstate->ee[idx(i, j)] * dz * dv;
-            num_Pbee += ivstate->bee[idx(i, j)] * dz * dv;
-            dnom_Pee += ivstate0->ee[idx(i, j)] * dz * dv;
+            num_Pee   += ivstate->ee[idx(i, j)] * dz * dv;
+            num_Pbee  += ivstate->bee[idx(i, j)] * dz * dv;
+            dnom_Pee  += ivstate0->ee[idx(i, j)] * dz * dv;
             dnom_Pbee += ivstate0->bee[idx(i, j)] * dz * dv;
         }
     }
@@ -174,7 +175,7 @@ void NuOsc::survival_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uin
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::dom_averaged_survival_prob(const FieldVar *ivstate, const FieldVar *ivstate0, const uint t)
+void NuOsc::v_distr_of_surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, const uint t)
 {
     /*
       Survival probabilities of each mode averaged over the domain at a give time.
@@ -194,18 +195,16 @@ void NuOsc::dom_averaged_survival_prob(const FieldVar *ivstate, const FieldVar *
     }
     for (int i = 0; i < nvz; i++)
     {
-        double P_ee = 0;
-        double P_bee = 0;
-
-        double P_ee0 = 0;
+        double P_ee   = 0;
+        double P_bee  = 0;
+        double P_ee0  = 0;
         double P_bee0 = 0;
 
         for (int j = 0; j < nz; j++)
         {
-            P_ee += ivstate->ee[idx(i, j)] * dz;
-            P_bee += ivstate->bee[idx(i, j)] * dz;
-
-            P_ee0 += ivstate0->ee[idx(i, j)] * dz;
+            P_ee   += ivstate->ee[idx(i, j)] * dz;
+            P_bee  += ivstate->bee[idx(i, j)] * dz;
+            P_ee0  += ivstate0->ee[idx(i, j)] * dz;
             P_bee0 += ivstate0->bee[idx(i, j)] * dz;
         }
         av_spv_ofstream << std::scientific << vz[i] << "\t"
@@ -215,24 +214,5 @@ void NuOsc::dom_averaged_survival_prob(const FieldVar *ivstate, const FieldVar *
     av_spv_ofstream.close();
 }
 
-/*---------------------------------------------------------------------------*/
+/*------------------------------- EOF ------------------------------------*/
 
-void NuOsc::copy_state(const FieldVar *ivstate, FieldVar *cpvstate)
-{
-    for (int i = 0; i < nvz; i++)
-    {
-        for (int j = 0; j < nz; j++)
-        {
-            cpvstate->ee[idx(i, j)] = ivstate->ee[idx(i, j)];
-            cpvstate->xx[idx(i, j)] = ivstate->xx[idx(i, j)];
-            cpvstate->ex_re[idx(i, j)] = ivstate->ex_re[idx(i, j)];
-            cpvstate->ex_im[idx(i, j)] = ivstate->ex_im[idx(i, j)];
-
-            cpvstate->bee[idx(i, j)] = ivstate->bee[idx(i, j)];
-            cpvstate->bxx[idx(i, j)] = ivstate->bxx[idx(i, j)];
-            cpvstate->bex_re[idx(i, j)] = ivstate->bex_re[idx(i, j)];
-            cpvstate->bex_im[idx(i, j)] = ivstate->bex_im[idx(i, j)];
-        }
-    }
-}
-/*---------------------------------------------------------------------------*/
