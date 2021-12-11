@@ -1,60 +1,3 @@
-void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
-{
-    std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
-    std::string con_qty_fname = ID + "_conserved_quantities.dat";
-    if (t == 0)
-    {
-        con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::trunc);
-    }
-    else
-    {
-        con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::app);
-    }
-    if (!con_qty_ofstream)
-    {
-        std::cout << "Unable to open " << con_qty_fname << std::endl;
-        return;
-    }
-    else
-    {
-        if (t == 0)
-        {
-            con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t), |M0|]\n";
-        }
-        double dP = 0.0;
-        double dbP = 0.0;
-        double Nee0 = 0.0;
-        double Nbee0 = 0.0;
-        double avdP = 0.0;
-        double avbdP = 0.0;
-
-        for (int i = 0; i < nvz; i++)
-        {
-            for (int j = 0; j < nz; j++)
-            {
-                int ij = idx(i, j);
-
-                dP = (dP >= fabs(P->normP[ij] - P0->normP[ij])) ? dP : fabs(P->normP[ij] - P0->normP[ij]);
-                dbP = (dbP >= fabs(P->normbP[ij] - P0->normbP[ij])) ? dbP : fabs(P->normbP[ij] - P0->normbP[ij]);
-
-                avdP += fabs(P->normP[ij] - P0->normP[ij]) * G0->G[ij];
-                avbdP += fabs(P->normbP[ij] - P0->normbP[ij]) * G0->bG[ij];
-
-                Nee0 += G0->G[ij];
-                Nbee0 += G0->bG[ij];
-            }
-        }
-        con_qty_ofstream << t << "\t"
-                         << std::scientific
-                         << ((dP >= dbP) ? dP : dbP) << "\t"
-                         << avdP / Nee0 << "\t"
-                         << avbdP / Nbee0 << "\t"
-                         << M_0->norm << endl;
-
-        con_qty_ofstream.close();
-    }
-}
-
 void NuOsc::analyse(const FieldVar *ivstate, const Pol *P0, uint n, uint t)
 {
     /****************************************************************************************/
@@ -119,6 +62,63 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
     }
 
     inMn->norm = sqrt(pow(inMn->e1, 2) + pow(inMn->e2, 2) + pow(inMn->e3, 2));
+}
+
+void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
+{
+    std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
+    std::string con_qty_fname = ID + "_conserved_quantities.dat";
+    if (t == 0)
+    {
+        con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::trunc);
+    }
+    else
+    {
+        con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::app);
+    }
+    if (!con_qty_ofstream)
+    {
+        std::cout << "Unable to open " << con_qty_fname << std::endl;
+        return;
+    }
+    else
+    {
+        if (t == 0)
+        {
+            con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t), |M0|]\n";
+        }
+        double dP = 0.0;
+        double dbP = 0.0;
+        double Nee0 = 0.0;
+        double Nbee0 = 0.0;
+        double avdP = 0.0;
+        double avbdP = 0.0;
+
+        for (int i = 0; i < nvz; i++)
+        {
+            for (int j = 0; j < nz; j++)
+            {
+                int ij = idx(i, j);
+
+                dP = (dP >= fabs(P->normP[ij] - P0->normP[ij])) ? dP : fabs(P->normP[ij] - P0->normP[ij]);
+                dbP = (dbP >= fabs(P->normbP[ij] - P0->normbP[ij])) ? dbP : fabs(P->normbP[ij] - P0->normbP[ij]);
+
+                avdP += fabs(P->normP[ij] - P0->normP[ij]) * G0->G[ij];
+                avbdP += fabs(P->normbP[ij] - P0->normbP[ij]) * G0->bG[ij];
+
+                Nee0 += G0->G[ij];
+                Nbee0 += G0->bG[ij];
+            }
+        }
+        con_qty_ofstream << t << "\t"
+                         << std::scientific
+                         << ((dP >= dbP) ? dP : dbP) << "\t"
+                         << avdP / Nee0 << "\t"
+                         << avbdP / Nbee0 << "\t"
+                         << M_0->norm << endl;
+
+        con_qty_ofstream.close();
+    }
 }
 
 /*---------------------------------------------------------------------------*/
