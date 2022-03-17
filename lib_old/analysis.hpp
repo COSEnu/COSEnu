@@ -113,7 +113,7 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
             }
         }
         con_qty_ofstream << t << "\t"
-                         << std::fixed << std::setprecision(20)
+                         << std::scientific
                          << ((dP >= dbP) ? dP : dbP) << "\t"
                          << avdP / Nee0 << "\t"
                          << avbdP / Nbee0 << "\t"

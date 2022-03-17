@@ -91,7 +91,7 @@ def rm(path):
 # --------------------------------------------------------------------------------------------------
 
 def configure(scheme="fv"):
-    
+    """Subroutine to read the configure file and make necessary folders"""
     proj_dir = os.getcwd()
     scheme_dir_path = ""
     with open(batch_configs_file) as f:
@@ -106,15 +106,19 @@ def configure(scheme="fv"):
     end_time = config["end_time"]
     nanalyze = config["n_analyze"]
     scheme_dir = os.path.join(proj_dir,  config[f'folder_{scheme}'])
-    scheme_dir_path = scheme_dir
-    
+    boundary = config['boundary']
+
     with open(presets_file, "w") as presets:
-        presets.write("#define PERIODIC_BC\n")
+        if boundary == 'open':
+            presets.write("#define OPEN_BC\n")
+        else:
+            presets.write("#define PERIODIC_BC\n")
 
         if (scheme == "fd"):
             presets.write("#define FD\n")
             presets.write("#define KO_ORD_3\n")
             presets.write("#define ADVEC_CENTER_FD\n")
+            
         if (scheme == "fv"):
             presets.write("#define FV\n")
 
@@ -128,7 +132,6 @@ def configure(scheme="fv"):
         
     # Creating necessary folders and copying files
     config_list = []
-    copied_files = []
 
     continue_if_exist = "N"
 
@@ -137,15 +140,18 @@ def configure(scheme="fv"):
         print(f"[ OK ]...Creating {scheme_dir}")
     except FileExistsError:
         print(f"[ EXISTS ]...{scheme_dir}")
-        continue_if_exist = input(file_exists_warning_prompt).upper()
-        if continue_if_exist == "N":
-            print(f"[ OK ]...exiting the {scheme} setup.")
-            sys.exit()
-        elif continue_if_exist == "Y":
-            print(f"[ OK ]...Setting up the projects for {scheme}.")
-        else:
-            print(f"[ FAIL ]...Invalid input {continue_if_exist} Exiting.")
-            sys.exit()
+        flag = True
+        while flag:
+            continue_if_exist = input(file_exists_warning_prompt).upper()
+            if continue_if_exist == "N":
+                print(f"[ OK ]...exiting the {scheme} setup.")
+                sys.exit()
+            elif continue_if_exist == "Y":
+                print(f"[ OK ]...Setting up the projects for {scheme}.")
+                flag = False
+            else:
+                print(f"[ FAIL ]...Invalid input {continue_if_exist}\n Re-enter.")
+                
 
     if (scheme == 'fd'):
         gz = 2
@@ -156,12 +162,13 @@ def configure(scheme="fv"):
     for i, nz in enumerate(nzs):
         for nvz in nvzs:
             for CFL in CFLS:
-                # CFL = CFLS[i]
+
                 z0 = z[0]
                 z1 = z[1]
                 dz = (z1-z0)/nz
                 dt = abs(CFL*dz/v1)
                 N_ITER = int(end_time/dt)
+
                 if nanalyze != 0:
                     ANAL_EVERY = int(N_ITER/nanalyze)
                     if (ANAL_EVERY < 1):
@@ -217,10 +224,11 @@ def configure(scheme="fv"):
 
     os.chdir(proj_dir)
 
-    return "success", scheme_dir_path
+    return "success", scheme_dir
 # --------------------------------------------------------------------------------------------------
 
 def compi(comp_opt = "--acc"):
+    """To compile the code"""
     pwd = os.getcwd()
     os.chdir(resources_dir)
     exe_path = os.path.join(os.getcwd(), TARGET)
@@ -261,6 +269,7 @@ def compi(comp_opt = "--acc"):
 # --------------------------------------------------------------------------------------------------
 
 def cp_exe(scheme_dir_path, exe_path):
+    """Copy executable from the compilation to the folders created(by configure)."""
     jobs_list = []
     with open(os.path.join(scheme_dir_path, jobs_list_file), 'r') as f:
         for line in f.readlines():
@@ -289,24 +298,29 @@ def run(jobs_list, scheme_dir_path):
 # --------------------------------------------------------------------------------------------------
 
 def main(mode, scheme):
-    compi_stat = "failed"
-    cp_stat = "failed"
-    run_stat = "failed"
+    conf_stat = "failed"  # Configuration status
+    compi_stat = "failed" # Compilation status
+    cp_stat = "failed"    # Copy status
+    run_stat = "failed"   # Run status
 
+    """Configure"""
     conf_stat, scheme_dir_path = configure(scheme)
     if conf_stat == "success":
+        """Compile"""
         compi_stat, exe_path = compi(mode)
     else:
         print("Configuration failed")
         return
 
     if compi_stat == "success":
+        """Copy executable to the folders"""
         cp_stat, jobs_list = cp_exe(scheme_dir_path, exe_path)
     else:
         print("Compilation failed")
         return
     
     if cp_stat == "success":
+        """Run jobs"""
         run_stat = run(jobs_list, scheme_dir_path)
     else:
         print(f"Copying executable failed.")
@@ -316,6 +330,7 @@ def main(mode, scheme):
         print("SUCCESS")
     else:
         print("FAILED")
+
 # --------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -323,7 +338,7 @@ if __name__ == "__main__":
         [ INITIALIZE ]
         ==============================================================
         
-        [ opt ] : (Initialize = Configure and compile)  the jobs.
+        [ opt ] : Initialize (= Configure + compile)  the jobs.
             opt : --score, --mcore, --acc
                 --score : Single core job
                 --mcore : Multicore job

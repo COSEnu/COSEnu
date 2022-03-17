@@ -142,8 +142,7 @@ public:
     void output_vsnap(const double, const int);
     void output_zsnap(const double, const int);
     void full_snap(const FieldVar*, std::string );
-    void write_state(unsigned int);
-    int read_state(std::string);
+
     // Analysis related methods.
     // Edit these functions as per the requirement.
     void cal_pol(const FieldVar *, Pol *);
@@ -173,87 +172,16 @@ void NuOsc::copy_state(const FieldVar *ivstate, FieldVar *cpvstate)
     }
 }
 
-void NuOsc::write_state(unsigned int t)
-{
-    std::string state_file_name = ID + "_state.bin";
-    std::string state_file_name_i = ID + "_state_" + std::to_string(t) + ".bin";
-    std::ofstream f_state(state_file_name_i, std::ios::out | std::ios::binary);
-    long int buffer_size = sizeof(double);
-
-    if(!f_state)
-    {
-        std::cout << "Failed call to open " << state_file_name_i << " in NuOsc::write_state. \n";
-        return;
-    }
-
-    f_state.write((char *)&t, sizeof(int)); // First entry is the current iteration 
-    for (int i=0; i<nvz; i++)
-    {
-        for(int j=0; j<nz; j++)
-        {
-            int ij = idx(i, j);
-            f_state.write((char *)&v_stat->ee[ij], buffer_size);
-            f_state.write((char *)&v_stat->xx[ij], buffer_size);
-            f_state.write((char *)&v_stat->ex_re[ij], buffer_size);
-            f_state.write((char *)&v_stat->ex_im[ij], buffer_size);
-
-            f_state.write((char *)&v_stat->bee[ij], buffer_size);
-            f_state.write((char *)&v_stat->bxx[ij], buffer_size);
-            f_state.write((char *)&v_stat->bex_re[ij], buffer_size);
-            f_state.write((char *)&v_stat->bex_im[ij], buffer_size);
-        }
-    }
-    f_state.close();
-
-    std::rename(state_file_name_i.c_str(), state_file_name.c_str());
-
-}
-
-
-int NuOsc::read_state(std::string state_file_name)
-{
-    std::ifstream f_state_in(state_file_name, std::ios::in | std::ios::binary);
-    if (!f_state_in)
-    {
-        std::cout << state_file_name << " does not exist. Exiting.\n";
-        exit(EXIT_FAILURE);
-    }
-
-    int t;
-    f_state_in.read((char *)&t, sizeof(int));
-    long int buffer_size = sizeof(double);
-    for (int i=0; i<nvz; i++)
-    {
-        for(int j=0; j<nz; j++)
-        {
-            int ij = idx(i, j);
-            f_state_in.read((char *)&v_stat->ee[ij], buffer_size);
-            f_state_in.read((char *)&v_stat->xx[ij], buffer_size);
-            f_state_in.read((char *)&v_stat->ex_re[ij], buffer_size);
-            f_state_in.read((char *)&v_stat->ex_im[ij], buffer_size);
-
-            f_state_in.read((char *)&v_stat->bee[ij], buffer_size);
-            f_state_in.read((char *)&v_stat->bxx[ij], buffer_size);
-            f_state_in.read((char *)&v_stat->bex_re[ij], buffer_size);
-            f_state_in.read((char *)&v_stat->bex_im[ij], buffer_size);
-        }
-    }
-    f_state_in.close();
-    return t;
-}
-
-
-
 void NuOsc::updateBufferZone(FieldVar *in)
 {
 
 #ifdef PERIODIC_BC
 #pragma omp parallel for
-#pragma acc parallel loop collapse(2) independent //  default(present)
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < gz; j++)
         {
+
             //lower side
             in->ee[idx(i, -j - 1)] = in->ee[idx(i, nz - j - 1)];
             in->xx[idx(i, -j - 1)] = in->xx[idx(i, nz - j - 1)];
@@ -281,7 +209,6 @@ void NuOsc::updateBufferZone(FieldVar *in)
 
 #ifdef OPEN_BC
 #pragma omp parallel for
-#pragma acc parallel loop collapse(2) indedependent // default(present)
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < gz; j++)
@@ -316,7 +243,6 @@ void NuOsc::updateBufferZone(FieldVar *in)
 void NuOsc::vectorize(FieldVar *v0, const FieldVar *v1, const real a, const FieldVar *v2)
 {
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop collapse(2) independent //default(present)
     for (int i = 0; i < nvz; i++)
         for (int j = 0; j < nz; j++)
         {
@@ -336,7 +262,6 @@ void NuOsc::vectorize(FieldVar *v0, const FieldVar *v1, const real a, const Fiel
 void NuOsc::vectorize(FieldVar *v0, const FieldVar *v1, const real a, const FieldVar *v2, const FieldVar *v3)
 {
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop collapse(2) independent //default(present)
     for (int i = 0; i < nvz; i++)
         for (int j = 0; j < nz; j++)
         {

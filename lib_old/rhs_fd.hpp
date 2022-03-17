@@ -1,9 +1,7 @@
 void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
 {
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop  gang /*async*/ // default(present) //gang //private(fac, s, ij, ee, xx, exr, exi, bee, bexx, bexr, bexi)
     for (int i = 0; i < nvz; i++)
-#pragma acc loop vector private(fac, s, ij, ee, xx, exr, exi, bee, bexx, bexr, bexi)
         for (int j = 0; j < nz; j++)
         {
             real *ee = &(in->ee[idx(i, j)]);
@@ -74,8 +72,6 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
             real Ibxx = 0;
             real Ibexr = 0;
             real Ibexi = 0;
-            
-#pragma acc loop seq /* vector*/ reduction(+:Iee, Ixx, Iexr, Iexi, Ibee, Ibxx, Ibexr, Ibexi) private(eep, xxp, expr, expi, beep, bxxp, bexpr, bexpi) //default(present)
             for (int k = 0; k < nvz; k++)
             { // vz' integral
                 real eep = (in->ee[idx(k, j)]);
@@ -129,4 +125,3 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
 #undef KO_FD
         }
 }
-

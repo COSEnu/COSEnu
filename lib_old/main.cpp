@@ -1,24 +1,24 @@
-
-// +------------------------------------------------------------------------------------------+
-// |                                          COSEnu                                          |
-// +------------------------------------------------------------------------------------------+
-// | Contributors:                                                                            |
-// |                                                                                          |
-// |	Chun-Yu Lin                                                                            |
-// |        - National Center for High-performance computing,                                 |
-// |          National Applied Research Laboratories, Hsinchu Science Park,                   |
-// |          Hsinchu City 30076, Taiwan.                                                     |
-// |                                                                                          |
-// |   Meng-Ru Wu, Manu George, Tony Liu, Yi-Siou Wu -                                        |
-// |        - Institute of Physics, Academia Sinica, Taipei, 11529, Taiwan.                   |
-// |                                                                                          |
-// |   Zewei Xiong                                                                            |
-// |        - GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1, 64291 Darmstadt  |
-// |          Germany.                                                                        |
-// |                                                                                          |
-// |   Kindly direct queries to cosenuproject@gmail.com                                       |
-// +------------------------------------------------------------------------------------------+
-
+/*
++------------------------------------------------------------------------------------------+
+|                                          COSEnu                                          |
++------------------------------------------------------------------------------------------+
+| Contributors:                                                                            |
+|                                                                                          |
+|	Chun-Yu Lin                                                                            |
+|        - National Center for High-performance computing,                                 |
+|          National Applied Research Laboratories, Hsinchu Science Park,                   |
+|          Hsinchu City 30076, Taiwan.                                                     |
+|                                                                                          |
+|   Meng-Ru Wu, Manu George, Tony Liu, Yi-Siou Wu -                                        |
+|        - Institute of Physics, Academia Sinica, Taipei, 11529, Taiwan.                   |
+|                                                                                          |
+|   Zewei Xiong                                                                            |
+|        - GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1, 64291 Darmstadt  |
+|          Germany.                                                                        |
+|                                                                                          |
+|   Kindly direct queries to cosenuproject@gmail.com                                       |
++------------------------------------------------------------------------------------------+
+*/
 
 
 // ......................... INCLUDES ......................... //
@@ -32,7 +32,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <chrono>
 
 using std::cin;
 using std::cout;
@@ -106,7 +105,7 @@ int main(int argc, char *argv[])
 	// ......................... CREATING STATE ......................... //
 
 	NuOsc state(pars.z0, pars.z1, pars.nz, pars.nvz, pars.CFL, pars.gz, ID, pars.SCHEME);
-	N_ITER = 1000; //pars.N_ITER;
+	N_ITER = pars.N_ITER;
 	std::cout << std::setw(30) << "NUMBER OFITERATIONS: " << N_ITER << std::endl;
 
 #ifdef VAC_OSC_ON
@@ -123,8 +122,6 @@ int main(int argc, char *argv[])
 	//................... MAKING COPYOF THE INITIAL STATE .................. //
 
 	FieldVar *v_stat0 = new FieldVar(state.size);
-    
-/*
 	state.copy_state(state.v_stat, v_stat0);
 
 	//......................... EVALUATING INITIAL STATE .........................//
@@ -155,14 +152,16 @@ int main(int argc, char *argv[])
 	state.full_snap(state.v_stat, "create");
 
 	// ......................... EVOLVING THE STATE ......................... //
-*/
-    auto start = std::chrono::steady_clock::now();
+
+	std::cout << "Running..."
+			  << "\n\n";
+
 	for (int t = 1; t < N_ITER; t++)
 	{
 		state.step_rk4();
 
 		// ...................... Phase-space snapshots ....................... //
-/*
+
 		if ((t % pars.v_snap_interval == 0) || (t == N_ITER - 1))
 		{
 			for (int i = 0; i < pars.vsnap_z.size(); i++)
@@ -193,35 +192,26 @@ int main(int argc, char *argv[])
 #endif
 			state.surv_prob(state.v_stat, v_stat0, t);
 		}
-*/
+
 		if (t % ((int)(N_ITER) / 10) == 0)
 		{
-			state.write_state(t);
 			std::cout << " " << std::setprecision(4)
 					  << (int)(t * 100.0 / (N_ITER - 1)) << " %"
 					  << std::endl;
 		}
 	}
-/*
+
 #ifdef COLL_OSC_ON
 	state.v_distr_of_surv_prob(state.v_stat, v_stat0, N_ITER - 1);
 	delete P0;
 #endif
 	delete v_stat0;
-*/
+
 	std::cout << " 100 %" << std::endl
 			  << std::endl
 			  << "SIMULATION COMPLETED"
 			  << std::endl;
 
-    std::ofstream xtf;
-    xtf.open(ID+"time.txt", std::ofstream::out | std::ofstream::trunc);
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end-start;
-    xtf << ID << "\t" <<  elapsed_seconds.count() << std::endl;
-    xtf.close();
-    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-    
 	return (0);
 }
 

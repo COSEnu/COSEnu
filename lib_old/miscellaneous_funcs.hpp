@@ -71,7 +71,7 @@ double g(double v, double v0, double sigma)
 
 inline double eps(double z, double z0)
 {
-    return 0.1 * exp(-(z - z0) * (z - z0) / 50.0);
+    return 1e-1 * exp(-(z - z0) * (z - z0) / 50.0);
 }
 
 /*---------------------------------------------------------------------------*/

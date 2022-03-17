@@ -4,7 +4,7 @@
 
 # Spatial domain specifics.
 zrange :  [-600, 600]
-nzs    :  [10000,]
+nzs    :  [1000, 2000]
 CFLS   :  [0.4,]
 
 #----------------------------------------------------------------#
@@ -12,15 +12,13 @@ CFLS   :  [0.4,]
 # Phase-space specifics.
 v0     : -1.0
 v1     :  1.0
-nvzs   :  [16,]
+nvzs   :  [50,]
 
 #----------------------------------------------------------------#
 
-boundary : periodic  # Options ->  periodic, open
-
-#----------------------------------------------------------------#
-
-end_time  : 600 # Physical end time
+# Number of iterations = int(end_time/dt)
+# dt = CFL*dz
+end_time  : 100
 
 #----------------------------------------------------------------#
 
@@ -29,36 +27,36 @@ advection_off : False # Options -> True, False
 
 # Switch on/off vacuum oscillation
 vac_osc_on : False # options -> True, False
-pmo   : 1.0        # 1.0 -> normal mass ordering, -1.0 -> inverted mass ordering, 0.0 -> no vacuum term.
-omega : 1.0        # \Dedlta m^2/2E.
-theta : 37         # Vacuum mixing angle in degrees.
+pmo   : 1.0 # 1.0 -> normal mass ordering, -1.0 -> inverted mass ordering, 0.0 -> no vacuum term.
+omega : 1.0 # \Dedlta m^2/2E.
+theta : 37 # Vacuum mixing angle in degrees.
 
 # Switch on/off collective oscillations
-collective_osc_on : True  # Options -> True, False
-mu : 1.0                  # \sqrt{2} G_F n_{\nu_e}
-#----------------------------------------------------------------#
+collective_osc_on : True # Options -> True, False
+mu : 1.0 # \sqrt{2} G_F n_{\nu_e}
+
 # ANALYSIS
 #----------------------------------------------------------------#
 
 # To analyze the behaviour of the conserved quantities.
-n_analyze : 1 # Total number of analysis to be carried out per job.
+n_analyze : 100 # Total number of analysis to be carried out per job.
 
 # To capture the evolution of the field variables for all the velocities over entire domain.
 n_fullsnap : 3
 
 # To capture the evolution of the field variables for all th velocity modes at given locations.
-n_vsnap     : 5           # snapshot of phase-space at vsnap_zlocs
-vsnap_z : [-300, 0, 300]  # z-locations for phsse-space snapshots.
+n_vsnap     : 5 # snapshot of phase-space at vsnap_zlocs
+vsnap_z : [-300, 0, 300] # z-locations for phsse-space snapshots.
 
 # To capture the evolution of the field variables for given modes over the entire domain.
-n_zsnap     : 5              # snapshot of entire domain for the v_modes at zsnap_vmodes
-                             # between time = 0 and time = end_time
-zsnap_v : [-1, -0.5, 0.5, 1] # velocity modes for full spatial domain snapshots.
+n_zsnap     : 5 # snapshot of entire domain for the v_modes at zsnap_vmodes
+                 # between time = 0 and time = end_time
+zsnap_v : [-1, -0.5, 0.5, 1] # v-modes for full spatial domain snapshots.
 
 #----------------------------------------------------------------#
 
 # Folder names
-folder_fv : "test-fv"
-folder_fd : "test-fd"
+folder_fv : "outputs-from-fv"
+folder_fd : "outputs-from-fd"
 
 #----------------------------------------------------------------#

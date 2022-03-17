@@ -32,8 +32,6 @@ void NuOsc::WENO7(const double *in, double *rflux, double *lflux)
         SI2 -> for stensil S3 = {i-3, i-2, i-1, i} -> r = 3 left shift.
     */
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop collapse(2) //default(present)
-//private(u, s, w0r_, w1r_, w2r_, w3r_, w0r, w1r, w2r, w3r, wr, w0l_, w1l_, w2l_, w3l_, w0l, w1l, w2l, w3l, wl,u0r, u1r, u2r, u3r, u0l, u1l, u2l, u3l, SI0, SI1, SI2, SI3)
     for (int i = 0; i < nvz; i++)
     {
         for (int j = -1; j < nz + 1; j++)
@@ -116,10 +114,8 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
     updateBufferZone(flux->lflux);
 
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop  gang /*async*/ // default(present) //gang //private(fac, s, ij, ee, xx, exr, exi, bee, bexx, bexr, bexi)
     for (int i = 0; i < nvz; i++)
     {
-#pragma acc loop vector private(fac, s, ij, ee, xx, exr, exi, bee, bexx, bexr, bexi)
         for (int j = 0; j < nz; j++)
         {
             double *ee = &(in->ee[idx(i, j)]);
@@ -181,7 +177,7 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
             double Ibexi = 0.0;
 
             double mut = mu;
-#pragma acc loop seq /* vector*/ reduction(+:Iee, Ixx, Iexr, Iexi, Ibee, Ibxx, Ibexr, Ibexi) private(eep, xxp, expr, expi, beep, bxxp, bexpr, bexpi) //default(present)
+
             for (int k = 0; k < nvz; k++)
             {
 
@@ -220,3 +216,4 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
     }
 }
 
+/*---------------------------------------------------------------------------*/
