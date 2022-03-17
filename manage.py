@@ -1,5 +1,6 @@
-# --------------------------------------------------------------------------------------------------
-
+""" Python interface to read anf set up the simulation(s) according
+to the specifications given in the lib/config.yaml file.
+"""
 try:
     import os
 except ImportError:
@@ -20,40 +21,34 @@ try:
 except ImportError:
     print(f"[ FAIL ]...unable to import the python package 'shutil'.")
     sys.exit()
+
 # --------------------------------------------------------------------------------------------------
-file_exists_warning_prompt = ("[ WARNING ]...The existing directrories and will be removed. " + 
-                            "Do you want to continue? (y/n): "
-                              )
-# --------------------------------------------------------------------------------------------------
-"""
-Files to be copied from resources folder to the
-job folder.
-"""
+
 presets_filename = "presets.hpp"
-source_files = [
-    'Makefile',
-    'Makefile.inc',
-    'structures.hpp',
-    presets_filename,
-    'parser.hpp',
-    'main.cpp',
-    'nuosc.hpp',
-    'rhs_fv.hpp',
-    'rhs_fd.hpp',
-    'initialize.hpp',
-    'snaps.hpp',
-    'analysis.hpp',
-    'miscellaneous_funcs.hpp',
-]
+
 # --------------------------------------------------------------------------------------------------
 
 TARGET = "main"
 OBJECT = "main.o"
+SOURCE = "main.cpp"
 
+# --------------------------------------------------------------------------------------------------
+
+GCC = "g++"
+PCC = "pgc++"
+OPT = "-fast -O3"
+STD = "-O3 -std=c++0x"
+
+# --------------------------------------------------------------------------------------------------
+
+file_exists_warning_prompt = ("[ WARNING ]...The existing directrories and will be removed. " + 
+                            "Do you want to continue? (y/n): "
+                              )
 # --------------------------------------------------------------------------------------------------
 
 proj_dir = os.getcwd()
 resources_dir = os.path.join(proj_dir, "lib")
+presets_file = os.path.join(resources_dir, presets_filename)
 
 # Configuration file for the collection of jobs.
 batch_configs_file = os.path.join(resources_dir, "configs.yaml")
@@ -67,11 +62,7 @@ job_config_file = ""
 # For submitting with condor
 condor_conf = os.path.join(resources_dir, "condor.conf")
 
-
-presets_file = os.path.join(resources_dir, presets_filename)
-
 # --------------------------------------------------------------------------------------------------
-
 
 def write_dict(dct, path):
     keys = dct.keys()
@@ -90,11 +81,19 @@ def export_job_configs(config_dict, path):
 
 # --------------------------------------------------------------------------------------------------
 
+def rm(path):
+    if os.path.exists(path):
+        stat = os.remove(path)
+        print(f'{path} removed.')
+    else:
+        print(f"{path} does not exist.")
+
+# --------------------------------------------------------------------------------------------------
 
 def configure(scheme="fv"):
-
+    
     proj_dir = os.getcwd()
-
+    scheme_dir_path = ""
     with open(batch_configs_file) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -107,7 +106,8 @@ def configure(scheme="fv"):
     end_time = config["end_time"]
     nanalyze = config["n_analyze"]
     scheme_dir = os.path.join(proj_dir,  config[f'folder_{scheme}'])
-
+    scheme_dir_path = scheme_dir
+    
     with open(presets_file, "w") as presets:
         presets.write("#define PERIODIC_BC\n")
 
@@ -124,7 +124,8 @@ def configure(scheme="fv"):
             presets.write("#define COLL_OSC_ON\n")
         if config["advection_off"] == True:
             presets.write("#define ADVEC_OFF\n")
-
+        presets.write("\n")
+        
     # Creating necessary folders and copying files
     config_list = []
     copied_files = []
@@ -146,32 +147,16 @@ def configure(scheme="fv"):
             print(f"[ FAIL ]...Invalid input {continue_if_exist} Exiting.")
             sys.exit()
 
-    os.chdir(scheme_dir)
-    # copying files from resources directory to the scheme directory
-    for file in source_files:
-        src = os.path.join(resources_dir, file)
-        dst = os.path.join(scheme_dir, file)
-
-        if os.path.exists(scheme_dir):
-            try:
-                shutil.copy(src, dst)
-                print(f"[ OK ]...Copying {src} to {dst}")
-                copied_files.append(dst)
-            except:
-                print(f"[ FAIL ]...Copying {src} to {dst} exiting.")
-                sys.exit()
-        else:
-            print(f"[ FAIL ]...Unable to locate {scheme_dir} Exiting.")
-            sys.exit()
-
     if (scheme == 'fd'):
         gz = 2
     elif (scheme == 'fv'):
         gz = 4
+        
     # Loding config values from config file
-    for nz in nzs:
+    for i, nz in enumerate(nzs):
         for nvz in nvzs:
             for CFL in CFLS:
+                # CFL = CFLS[i]
                 z0 = z[0]
                 z1 = z[1]
                 dz = (z1-z0)/nz
@@ -211,7 +196,7 @@ def configure(scheme="fv"):
                 config_id = f"{nz}_{nvz}_{CFL}"
 
                 # Making directory with name ID
-                model_dir = config_id
+                model_dir = os.path.join(scheme_dir, config_id)
 
                 # Config file for the job "ID"
                 config_file = f"job.config"
@@ -229,332 +214,142 @@ def configure(scheme="fv"):
 
     job_config_file = os.path.join(scheme_dir, jobs_list_file)
     export_job_configs(config_list, job_config_file)
-    shutil.copy(condor_conf, scheme_dir)
 
     os.chdir(proj_dir)
 
-    return proj_dir, scheme_dir, job_config_file, copied_files
-
+    return "success", scheme_dir_path
 # --------------------------------------------------------------------------------------------------
 
+def compi(comp_opt = "--acc"):
+    pwd = os.getcwd()
+    os.chdir(resources_dir)
+    exe_path = os.path.join(os.getcwd(), TARGET)
 
-def initialize(scheme):
+    rm(os.path.join(os.getcwd(), OBJECT))
+    rm(os.path.join(os.getcwd(), TARGET))
+    comp_stat = None
 
-    proj_dir, scheme_dir, job_config_file, copied_files = configure(
-        scheme=scheme)
-    os.chdir(scheme_dir)
-
-    # Compiling
-    TARGET = "main"
-    OBJECT = "main.o"
-
-    for f in os.listdir("./"):
-        if f == TARGET or f == OBJECT:
-            os.remove(f)
-
-    try:
-        print()
-        stat_make = os.system(f"make")
-        print()
-        if stat_make == 0:
-            print(f"[ OK ]...Successfully compiled.")
+    if comp_opt == "--score":
+        comp_stat = os.system(f"{GCC} {STD} -o {TARGET} {SOURCE}")
+        if comp_stat == 0:
+            print(f"{TARGET} generated for singlecore job")
         else:
-            print(f"[ FAIL ]...Compilation failed.")
-            sys.exit()
-    except:
-        print(f"[ FAIL ]...Compile")
+            return None, None
 
-    for file_item in copied_files:
-        os.remove(file_item)
+    elif comp_opt == "--mcore":
+        #comp_stat = os.system(f"make")
+        comp_stat = os.system(f"{PCC} {OPT} -ta=multicore -Minfo=accel -o {TARGET} {SOURCE}")
+        if comp_stat == 0:
+            print(f"{TARGET} generated for multicore job")
+        else:
+            return None, None
+    elif comp_opt == "--acc":
+        comp_stat = os.system(f"{PCC} {OPT} -acc -Minfo=accel -ta=tesla:managed -o {TARGET} {SOURCE}")
 
-    os.chdir(proj_dir)
-
-    return proj_dir, scheme_dir, job_config_file
-
-# --------------------------------------------------------------------------------------------------
-
-# For submitting with condor
-def submit_with_condor(scheme):
-    print(
-        f'[ START ]...Identifying the scheme directory from {batch_configs_file}.')
-
-    with open(batch_configs_file) as f:
-        require = yaml.load(f, Loader=yaml.FullLoader)
-        scheme_dir = os.path.join(proj_dir, require[f'folder_{scheme}'])
-
-    print(f'[ FINISHED ]...Scheme directory identified to be {scheme_dir}')
-    print(f'[ OK ]...Continuing with the submission.')
-
-    try:
-        os.chdir(scheme_dir)
-        job_config_file = os.path.join(scheme_dir, jobs_list_file)
-        submit_jobs_list = []
-        with open(job_config_file, 'r') as f:
-            for line in f.readlines():
-                submit_jobs_list.append(line.strip("\n").split(","))
-    except FileNotFoundError:
-        print(f'[ FAIL ]...unable to locate {scheme_dir}. Exiting')
-        sys.exit()
-
-    for item in submit_jobs_list:
-        id, _ = item[0], item[1]
-        model_dir = os.path.join(scheme_dir, id)
-
-        try:
-            pwd = os.getcwd()
-            os.chdir(model_dir)
-            shutil.copy(condor_conf, os.path.join(
-                model_dir, 'job.submit'))
-            shutil.copy(os.path.join(scheme_dir, TARGET),
-                        os.path.join(model_dir, TARGET))
-            model_job_config_file = os.path.join(model_dir, f'job.req')
-
-            with open(model_job_config_file, 'w') as f:
-                f.write(f"{id},job.config")
-
-            os.system(f"condor_submit job.submit")
-            os.chdir(pwd)
-
-        except FileNotFoundError:
-            print(f'[ FAIL ]...unable to locate {model_dir}. Exiting')
-            sys.exit()
-
-    os.chdir(scheme_dir)
-   
-
-# --------------------------------------------------------------------------------------------------
-
-# For submitting with slurm
-def submit_with_slurm(scheme):
-    slurm_conf = os.path.join(resources_dir, "slurm.conf")
-    print(slurm_conf)
-
-    print(f'[ START ]...Identifying the scheme directory from {batch_configs_file}.')
-
-    with open(batch_configs_file) as f:
-        require = yaml.load(f, Loader=yaml.FullLoader)
-        scheme_dir = os.path.join(proj_dir, require[f'folder_{scheme}'])
-
-    print(f'[ FINISHED ]...Scheme directory identified to be {scheme_dir}')
-    print(f'[ OK ]...Submitting')
-
-    try:
-        os.chdir(scheme_dir)
-        job_config_file = os.path.join(scheme_dir, jobs_list_file)
-        submit_jobs_list = []
-        with open(job_config_file, 'r') as f:
-            for line in f.readlines():
-                submit_jobs_list.append(line.strip("\n").split(","))
-    except FileNotFoundError:
-        print(f'[ FAIL ]...unable to locate {scheme_dir}. Exiting')
-        sys.exit()
-
-    for item in submit_jobs_list:
-        id, config_file = item[0], item[1]
-        model_dir = os.path.join(scheme_dir, id)
-
-        try:
-            pwd = os.getcwd()
-            os.chdir(model_dir)
-            shutil.copy(os.path.join(scheme_dir, TARGET),
-                        os.path.join(model_dir, TARGET))
-
-            slurm_sh = os.path.join(model_dir, f"sbatch.sh")
-
-            with open(slurm_sh, 'w') as fslurm_sh:
-                with open(slurm_conf, 'r') as fslurm_conf:
-                    for line in fslurm_conf.readlines():
-                        fslurm_sh.write(line)
-                fslurm_sh.write(f"srun -p a100 ./{TARGET} --id {id} --conf job.config")
-
-            os.system(f"sbatch {slurm_sh}")
-            os.chdir(pwd)
-
-        except FileNotFoundError:
-            print(f'[ FAIL ]...unable to locate {model_dir}. Exiting')
-            sys.exit()
-
-    os.chdir(scheme_dir)
-
-# --------------------------------------------------------------------------------------------------
-
-
-def submit_to_local_machine(scheme):
-    import time
-    print(
-        f'[ START ]...Identifying the job directory from {batch_configs_file}.')
-
-    with open(batch_configs_file) as f:
-        require = yaml.load(f, Loader=yaml.FullLoader)
-        scheme_dir = os.path.join(proj_dir, require[f'folder_{scheme}'])
-
-    print(f'[ FINISHED ]...job directory identified to be {scheme_dir}')
-    print(f'[ OK ]...Continuing with the submission.')
-
-    if os.path.exists(scheme_dir):
-        os.chdir(scheme_dir)
-        job_config_file = os.path.join(scheme_dir, jobs_list_file)
-        submit_jobs_list = []
-        try:
-            with open(job_config_file, 'r') as f:
-                for line in f.readlines():
-                    submit_jobs_list.append(line.strip("\n").split(","))
-        except FileNotFoundError:
-            print(f'[ FAIL ]...unable to find {job_config_file}. Exiting')
-            sys.exit()
+        if comp_stat == 0:
+            print(f"{TARGET} generated for accelerated job")
+        else:
+            return None, None
     else:
-        print(f'[ FAIL ]...Path {scheme_dir} does not exists.')
-        sys.exit()
+        print(f"Invalid compilation option {comp_opt}")
+    
+    os.chdir(pwd)
+    stat = "failed"
+    if comp_stat == 0:
+        stat = "success"
+    return stat, exe_path
+# --------------------------------------------------------------------------------------------------
 
-    for item in submit_jobs_list:
-        id, config_file = item[0], item[1]
-        model_dir = os.path.join(scheme_dir, id)
+def cp_exe(scheme_dir_path, exe_path):
+    jobs_list = []
+    with open(os.path.join(scheme_dir_path, jobs_list_file), 'r') as f:
+        for line in f.readlines():
+            job = line.strip("\n").split(",")[0]
+            jobs_list.append(line.strip("\n").split(",")[0])
+            dst = os.path.join(scheme_dir_path, job, TARGET)
+            if os.path.exists(dst):
+                os.system(f"rm {dst}")
+                print(f"removed {dst}")
+                shutil.copy(exe_path, dst)
+            else:
+                shutil.copy(exe_path, dst)
+                
+    return "success", jobs_list
+    
+# --------------------------------------------------------------------------------------------------
 
-        try:
-            pwd = os.getcwd()
-            os.chdir(model_dir)
-            shutil.copy(os.path.join(scheme_dir, TARGET),
-                        os.path.join(model_dir, TARGET))
+def run(jobs_list, scheme_dir_path):
+    pwd = os.getcwd()
+    for job in jobs_list:
+        os.chdir(os.path.join(scheme_dir_path, job))
+        os.system(f"./{TARGET} --id {job} --conf job.config")
+        os.chdir(pwd)
+    return "success"
 
-            print(f"Running {id}")
-            start = time.time()
-            os.system(f"./{TARGET} --id {id} --conf {config_file}")
-            end = time.time()
-            print(f"Job: {id} finished in {end-start:.5f} seconds.")
-            os.chdir(pwd)
+# --------------------------------------------------------------------------------------------------
 
-        except FileNotFoundError:
-            print(f'[ FAIL ]...unable to locate {model_dir}. Exiting')
-            sys.exit()
+def main(mode, scheme):
+    compi_stat = "failed"
+    cp_stat = "failed"
+    run_stat = "failed"
 
-    os.chdir(scheme_dir)
-    try:
-        os.remove(OBJECT)
-    except FileNotFoundError:
-        print(f"[ FAIL ]...Unable to remove {OBJECT} as it does not exist.")
+    conf_stat, scheme_dir_path = configure(scheme)
+    if conf_stat == "success":
+        compi_stat, exe_path = compi(mode)
+    else:
+        print("Configuration failed")
+        return
 
+    if compi_stat == "success":
+        cp_stat, jobs_list = cp_exe(scheme_dir_path, exe_path)
+    else:
+        print("Compilation failed")
+        return
+    
+    if cp_stat == "success":
+        run_stat = run(jobs_list, scheme_dir_path)
+    else:
+        print(f"Copying executable failed.")
+        return
+        
+    if run_stat == "success":
+        print("SUCCESS")
+    else:
+        print("FAILED")
 # --------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-
-    available_options = """
-        [ --in ] : (Initialize = Configure and compile)  the jobs.
-        [ --ls ] : Run the initialize jobs on local machine.
-        [ --cs ] : Submit the initialized jobs to the condor.
-        [ --ss ] : Submit the initialized jobs to the slrum.
+    available_options = """ Available options:
+        [ INITIALIZE ]
+        ==============================================================
+        
+        [ opt ] : (Initialize = Configure and compile)  the jobs.
+            opt : --score, --mcore, --acc
+                --score : Single core job
+                --mcore : Multicore job
+                --acc   : GPU accelerated job
 	"""
 
-    sample_templates = """
-        Initialize finite volume scheme     : $ python manage.py --in fv 
-        Initialize finite difference scheme : $ python manage.py --in fd
-        Run the initialized jobs locally    : $ python manage.py --ls fd(or fv)
-        Submit to the using condor          : $ python manage.py --cs fd(or fv) 
-        Submit to the using slrum           : $ python manage.py --ss fd(or fv) 
+    sample_templates = """eg:
+        Run finite volume scheme     : $ python manage.py  --acc fv 
+        Run finite difference scheme : $ python manage.py  --acc fd
 	"""
 
     PWD = os.getcwd()
-    init_scheme = None  # Scheme to be compiled and configured
-    cluster_sub_scheme = None
-    local_run_scheme = None
-    slurm_sub_scheme = None
-
+    scheme = "--fv"
+    mode = "--mcore"
     if len(sys.argv) > 1:
         for i in range(1, len(sys.argv)):
-            if sys.argv[i] == "--in":
-                init_scheme = sys.argv[i+1]
+            if sys.argv[i] == "--score" or sys.argv[i] == "--mcore" or sys.argv[i] == "--acc":
+                mode  = sys.argv[i]                
                 i += 1
-            elif sys.argv[i] == '--cs':
-                cluster_sub_scheme = sys.argv[i+1]
+            elif sys.argv[i] == 'fv' or sys.argv[i] == 'fd':
+                scheme = sys.argv[i]
                 i += 1
-            elif sys.argv[i] == '--ls':
-                local_run_scheme = sys.argv[i+1]
-                i += 1
-            elif sys.argv[i] == '--ss':
-                slurm_sub_scheme = sys.argv[i+1]
-                i += 1
-            elif sys.argv[i] == "--help":
-                print(f"Available opts: \n {available_options}\n\n")
-                print(f"Eg.: {sample_templates}\n")
-                exit(0)
+            else:
+                print(f"Unrecognized option {sys.argv[i]}")
+                print(available_options)
+                sys.exit()
 
-            
-
-    if init_scheme == None and cluster_sub_scheme == None and local_run_scheme == None and slurm_sub_scheme == None:
-        print(f'[ JOBLESS ]...Asked to do nothing. Exiting.')
-        print(f"Suggestions:")
-        print(f"you have the following options: \n {available_options}")
-        print(f"Try using from the following templates: \n {sample_templates}")
-        os.chdir(PWD)
-        sys.exit()
-
-    """
-	Initializing the schemes: 
-	Making the necessary directories, 
-	copying files from resources and 
-	compiling the files.
-	"""
-    if init_scheme != None:
-        if init_scheme == "fv" or init_scheme == "fd":
-            proj_dir, scheme_dir, job_config_file = initialize(init_scheme)
-        else:
-            print(f"[ FAIL ]...Unrecognized input after --init {init_scheme}.")
-            print(f"Suggestions:")
-            print(f"you have the following options: \n {available_options}")
-            print(
-                f"Try using from the following templates: \n {sample_templates}")
-            os.chdir(PWD)
-            sys.exit()
-
-    """
-	Submiting the initialized jobs to the cluster.
-	"""
-    if cluster_sub_scheme != None:
-        if cluster_sub_scheme == "fv" or cluster_sub_scheme == "fd":
-            pwd = os.getcwd()
-            submit_with_condor(cluster_sub_scheme)
-            os.chdir(pwd)
-        else:
-            print(
-                f"[ FAIL ]...Unrecognized input {cluster_sub_scheme} after --cs")
-            print(
-                f"Try using from the following templates: \n {sample_templates}")
-            os.chdir(PWD)
-            sys.exit()
-
-    """
-	Submiting the initialized jobs to slurm.
-	"""
-    if slurm_sub_scheme != None:
-        if slurm_sub_scheme == "fv" or slurm_sub_scheme == "fd":
-            pwd = os.getcwd()
-            submit_with_slurm(slurm_sub_scheme)
-            os.chdir(pwd)
-        else:
-            print(
-                f"[ FAIL ]...Unrecognized input {slurm_sub_scheme} after --ss")
-            print(
-                f"Try using from the following templates: \n {sample_templates}")
-            os.chdir(PWD)
-            sys.exit()
-
-    """
-	Submiting the initialized jobs to the local machine.
-	"""
-    if local_run_scheme != None:
-        if local_run_scheme == "fv" or local_run_scheme == "fd":
-            pwd = os.getcwd()
-            submit_to_local_machine(local_run_scheme)
-            os.chdir(pwd)
-        else:
-            print(
-                f"[ FAIL ]...Unrecognized input {local_run_scheme} after --ls")
-            print(
-                f"Try using from the following templates: \n {sample_templates}")
-            os.chdir(PWD)
-            sys.exit()
-
+    main(mode, scheme)
     os.chdir(PWD)
-    print()
-    print('[ FINISHED ]')
-
-# --------------------------------------------------------------------------------------------------
