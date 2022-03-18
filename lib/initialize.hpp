@@ -37,7 +37,6 @@ void NuOsc::initialize()
             g_file.write((char *)&G0->G [idx(i, j)], sizeof(double)); 
             g_file.write((char *)&G0->bG[idx(i, j)], sizeof(double));
         }
-        g_file << "\n";
     }
     updateBufferZone(v_stat);
     std::cout << "Simulation state initialized." << std::endl;

@@ -41,7 +41,7 @@ mu : 1.0                  # \sqrt{2} G_F n_{\nu_e}
 #----------------------------------------------------------------#
 
 # To analyze the behaviour of the conserved quantities.
-n_analyze : 1 # Total number of analysis to be carried out per job.
+n_analyze : 100 # Total number of analysis to be carried out per job.
 
 # To capture the evolution of the field variables for all the velocities over entire domain.
 n_fullsnap : 3
