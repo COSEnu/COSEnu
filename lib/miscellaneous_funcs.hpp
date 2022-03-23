@@ -1,36 +1,19 @@
 /*---------------------------------------------------------------------------*/
-template <typename T>
-void string_to_type(std::string value, T &var)
-{
-    std::stringstream svalue(value);
-    svalue >> var;
-}
-/*---------------------------------------------------------------------------*/
-template <typename T>
-void cssl_to_vec(std::string cssl, std::vector<T> &vec) //cssl -> comma-seperated-string-list
-{
-    int start = cssl.find_first_of("[");
-    int end = cssl.find_first_of("]");
-    cssl = cssl.substr(start + 1, end - 1);
 
-    // In case any accidantal space in the begining of cssl.
-    cssl = cssl.substr(cssl.find_first_not_of(" "), end - 1) + ",;";
-    std::string c = "";
-    
-    while (true)
+bool file_exists(std::string path)
+{
+    std::ifstream f(path, 'r');
+    if (!f)
     {
-        c = cssl.substr(0, cssl.find_first_of(","));
-        cssl = cssl.substr(cssl.find_first_of(","), cssl.find_first_of("]"));
-        cssl = cssl.substr(cssl.find_first_not_of(" ") + 1, cssl.find_first_of("]"));
-        std::stringstream svalue(c);
-        T tval;
-        svalue >> tval;
-        vec.push_back(tval);
-
-        if (cssl == ";")
-            break;
+        return false;
+    }
+    else
+    {
+        f.close();
+        return true;
     }
 }
+
 /*---------------------------------------------------------------------------*/
 std::string draw(const int l, const string c)
 {
@@ -119,10 +102,10 @@ double L(double x, unsigned int order)
         value = x;
         break;
     case 2:
-        value = 0.5*(3*x*x - 1);
+        value = 0.5 * (3 * x * x - 1);
         break;
     case 3:
-        value = 0.5*(5*pow(x, 3)-3*x);
+        value = 0.5 * (5 * pow(x, 3) - 3 * x);
         break;
     default:
         value = 0;

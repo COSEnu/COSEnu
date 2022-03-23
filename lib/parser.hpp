@@ -1,3 +1,46 @@
+/*---------------------------------------------------------------------------*/
+template <typename T>
+void string_to_type(std::string value, T &var)
+{
+    /*Convert string to type T and assign it to var*/
+    std::stringstream svalue(value);
+    svalue >> var;
+}
+
+/*---------------------------------------------------------------------------*/
+
+template <typename T>
+void cssl_to_vec(std::string cssl, std::vector<T> &vec) // cssl -> comma-separated-string-list
+{
+    /*
+        Convert comma sepparated list of strings(if the fiorm [a, b, c, ...]) and convert it to a 
+        vector of type T.
+    */
+    int start = cssl.find_first_of("[");
+    int end = cssl.find_first_of("]");
+    cssl = cssl.substr(start + 1, end - 1);
+
+    // In case any accidantal space in the begining of cssl.
+    cssl = cssl.substr(cssl.find_first_not_of(" "), end - 1) + ",;";
+    std::string c = "";
+
+    while (true)
+    {
+        c = cssl.substr(0, cssl.find_first_of(","));
+        cssl = cssl.substr(cssl.find_first_of(","), cssl.find_first_of("]"));
+        cssl = cssl.substr(cssl.find_first_not_of(" ") + 1, cssl.find_first_of("]"));
+        std::stringstream svalue(c);
+        T tval;
+        svalue >> tval;
+        vec.push_back(tval);
+
+        if (cssl == ";")
+            break;
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
 class Params
 {
 public:
@@ -67,9 +110,8 @@ Params::Params(std::string CONFIG_FILE)
     {
         std::cout << "[ FAIL ]...Unable to open "
                   << CONFIG_FILE
-                  << "exitting for now"
-                  << std::endl;
-        exit(0);
+                  << "exitting.\n"
+        exit(EXIT_FAIL);
     }
     while (config)
     {
@@ -139,7 +181,6 @@ Params::Params(std::string CONFIG_FILE)
                 string_to_type(value, ANAL_EVERY);
                 is_ANAL_EVERY = true;
             }
-#ifdef VAC_OSC_ON
             else if (key == "pmo")
             {
                 string_to_type(value, pmo);
@@ -155,14 +196,11 @@ Params::Params(std::string CONFIG_FILE)
                 string_to_type(value, theta);
                 is_theta = true;
             }
-#endif
-#ifdef COLL_OSC_ON
             else if (key == "mu")
             {
                 string_to_type(value, mu);
                 is_mu = true;
             }
-#endif
             else if (key == "n_fullsnap")
             {
                 string_to_type(value, n_fullsnap);

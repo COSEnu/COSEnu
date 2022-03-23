@@ -58,7 +58,7 @@ zsnap_v : [-1, -0.5, 0.5, 1] # velocity modes for full spatial domain snapshots.
 #----------------------------------------------------------------#
 
 # Folder names
-folder_fv : "test-fv"
-folder_fd : "test-fd"
+folder_fv : "output-from-fv"
+folder_fd : "output-from-fd"
 
 #----------------------------------------------------------------#

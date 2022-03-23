@@ -3,7 +3,7 @@
 
 void NuOsc::write_state(unsigned int t)
 {
-    std::string file_name = ID + "_state.bin";
+    std::string file_name = ID + "_state.bin";    
     std::string file_name_temp = ID + "_state" + std::to_string(t) + ".bin";
     std::ofstream fpw(file_name_temp, std::ios::out | std::ios::binary);
     long int buffer_size = sizeof(double);
@@ -73,10 +73,11 @@ void NuOsc::write_state0(const FieldVar * stat0)
 int NuOsc::read_state()
 {
     std::string file_name = ID+"_state.bin";
+    if(!path_exist(file_name)) exit(EXIT_FAILURE);
     std::ifstream fpr(file_name, std::ios::in | std::ios::binary);
     if (!fpr)
     {
-        std::cout << file_name << " does not exist. Exiting.\n";
+        std::cout << file_name << " did not open. Exiting.\n";
         exit(EXIT_FAILURE);
     }
 

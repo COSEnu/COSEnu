@@ -1,12 +1,12 @@
-/*
-Initialize the components of \rho and \bar{\rho}
-here.
-*/
 void NuOsc::initialize()
 {
+/*
+    Initialize the components of \rho and \bar{\rho}
+    here.
+*/
     double signu = 0.6;
     double sigbnu = 0.53;
-    double alpha = 1.1;
+    double alpha = 0.9;
 
     std::ofstream g_file(ID + "_G0.bin",std::ofstream::out | std::ofstream::binary);
     if(!g_file)
@@ -15,8 +15,6 @@ void NuOsc::initialize()
         << "Will not be storing initial angular profiles.\n";
     }
 
-    // Init value
-// #pragma omp parallel for collapse(2)
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < nz; j++)

@@ -20,7 +20,6 @@
 // +------------------------------------------------------------------------------------------+
 
 
-
 // ......................... INCLUDES ......................... //
 
 #include <cstdio>
@@ -64,7 +63,6 @@ int main(int argc, char *argv[])
 	std::string SCHEME = "";
 	std::string ID = "";
 	std::string CONFIG_FILE = "";
-	std::string STATE_FILE = "";
 
 	unsigned int N_ITER;
 	int t0 = 0;
@@ -92,7 +90,6 @@ int main(int argc, char *argv[])
 		}
 		else if (strcmp(argv[i], "--ff")==0)
 		{
-			STATE_FILE = argv[i];
 			is_ff = true;
 		}
 	}
@@ -104,8 +101,8 @@ int main(int argc, char *argv[])
 				  << "on runtime." << std::endl
 				  << "Use --id and --conf to specify them." << std::endl
 				  << "General format:\n" 
-				  << "\t" << "$./main --id <ID> --conf <Configuration file name>\n"
-				  << "If loading field variable from .bin file:\n"
+				  << "\t" << "$./main --id <ID> --conf <Configuration file name>\n\n"
+				  << "If loading field variables from .bin file:\n"
 				  << "\t" << "$./main --id <ID> --conf <Configuration file name> --ff\n"
 				  << "The --ff flag will look for binary files named ID_state.bin and ID_G0.bin in the same folder.\n"
 				  << "eg:(inside condor submit file)" << std::endl
@@ -124,22 +121,27 @@ int main(int argc, char *argv[])
 	// ......................... CREATING STATE ......................... //
 
 	NuOsc state(pars.z0, pars.z1, pars.nz, pars.nvz, pars.CFL, pars.gz, ID, pars.SCHEME);
-	N_ITER = 1000; //pars.N_ITER;
+	N_ITER = pars.N_ITER;
 	std::cout << std::setw(30) << "NUMBER OFITERATIONS: " << N_ITER << std::endl;
 
 #ifdef VAC_OSC_ON
+	// Vacuum oscillation parameters
 	state.set_vac_pars(pars.pmo, pars.omega, pars.theta);
 #endif
 #ifdef COLL_OSC_ON
+	// Collective oscillation parameters
 	state.set_collective_pars(pars.mu);
 #endif
 
 	//......................... INITIALIZING STATE ......................... //
 
 	FieldVar *v_stat0 = new FieldVar(state.size);
-
+    
 	if (!is_ff)
 	{
+		/*
+			Initialize the field variables and angular profiles from the subroutine if is_ff==false.
+		*/
 		state.initialize();
 		state.copy_state(state.v_stat, v_stat0);
 		state.write_state0(v_stat0);
@@ -147,6 +149,9 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
+		/*
+			Initialize the field variables and angular profiles from the binary files if is_ff==true.
+		*/
 		state.read_G0();
 		t0 = state.read_state();
 		state.read_state0(v_stat0);
@@ -188,7 +193,7 @@ int main(int argc, char *argv[])
 
 		// ........................... Full-snapshot ...............................//
 
-		// state.full_snap(state.v_stat, "create");
+		state.full_snap(state.v_stat, "create");
 
 		// ......................... EVOLVING THE STATE ......................... //
 
@@ -203,7 +208,8 @@ int main(int argc, char *argv[])
 		state.step_rk4();
 
 		// ...................... Phase-space snapshots ....................... //
-
+		// Angular space snapshot of all firld variable at the location = pars.vsnap_z[i]
+		// and time = t.
 		if ((t % pars.v_snap_interval == 0) || (t == N_ITER - 1))
 		{
 			for (int i = 0; i < pars.vsnap_z.size(); i++)
@@ -216,29 +222,38 @@ int main(int argc, char *argv[])
 
 		if ((t % pars.z_snap_interval == 0) || (t == N_ITER - 1))
 		{
+			// Domain snapshot of all field variables for the velocity mode = pars.zsnap_v[i]
+			// at time = t.
 			for (int i = 0; i < pars.zsnap_v.size(); i++)
 			{
 				state.output_zsnap(pars.zsnap_v[i], t);
 			}
 		}
 
-		// if ((t % pars.fullsnap_interval) == 0)
-		// {
-		// 	state.full_snap(state.v_stat, "app");
-		// }
+		if ((t % pars.fullsnap_interval) == 0)
+		{
+			// Snapshot of all field variables at all pahese-space and spatial points.
+			state.full_snap(state.v_stat, "app");
+		}
+
 		// ......................... Analysis ......................... //
+
 		if (t % pars.ANAL_EVERY == 0)
 		{
-
 #ifdef COLL_OSC_ON
+			// Analyze to note the deviation of conserved quantities.
 			state.analyse(state.v_stat, P0, 0, t);
 #endif
-
+			// Estimates the survival probabilities.
 			state.surv_prob(state.v_stat, v_stat0, t);
 		}
 
 		if (t % ((int)(N_ITER) / 10) == 0)
 		{
+			// Write the state of the field variable to a binary file
+			// so that the execution of the simulation can be restarted
+			// from the last stored values (using the --ff flag) 
+			// if there is any kind of aboting.
 			state.write_state(t);
 			std::cout << " " << std::setprecision(4)
 					  << (int)(t * 100.0 / (N_ITER - 1)) << " %"
@@ -247,6 +262,8 @@ int main(int argc, char *argv[])
 	}
 
 #ifdef COLL_OSC_ON
+	// Estimate the angular distribution of the surviuval probabilities
+	// at the end of the simulation.
 	state.v_distr_of_surv_prob(state.v_stat, v_stat0, N_ITER - 1);
 	delete P0;
 #endif

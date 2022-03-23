@@ -4,7 +4,7 @@ void NuOsc::analyse(const FieldVar *ivstate, const Pol *P0, uint n, uint t)
     /* Subroutine to check the deviation of conserved quantities.                           */
     /*                                                                                      */
     /* (1)---                                                                               */
-    /*   Estimate maximal deviation of polarization,max(ep_i) for all ep_i belongs to       */
+    /*   Estimate maximal deviation of polarization,max{ep_i} for all ep_i belongs to       */
     /*   {P(z_j, v_i) - P0(z_j, v_i)}, i:0->nvz, j:0->nz.                                   */
     /*                                                                                      */
     /* (2)---                                                                               */
@@ -24,7 +24,7 @@ void NuOsc::analyse(const FieldVar *ivstate, const Pol *P0, uint n, uint t)
 
 void NuOsc::cal_pol(const FieldVar *inField, Pol *inP)
 {
-    /* Calculate the polarization(\vec {P}) of nu and anu and respective |\vec{P}|*/
+    /* Calculate the polarization vector(\vec {P}) of nu and anu and correspondig |\vec{P}|*/
 
     for (int i = 0; i < nvz; i++)
     {
@@ -49,7 +49,7 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 {
     /*
         Subroutine to calculate the moments. L(vz[i], n) returns the legendre polynomial 
-        of order n (up to 5) for the mode vz[i]
+        of order n (up to n=5) for the mode vz[i]
     */
     for (int i = 0; i < nvz; i++)
     {
@@ -68,6 +68,10 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 
 void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
 {
+    /*
+        Estimates the deviation of conserved quantities from their initial values and write them ot the
+        file.
+    */
     std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
     std::string con_qty_fname = ID + "_conserved_quantities.dat";
     if (t == 0)
