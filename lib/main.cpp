@@ -4,7 +4,7 @@
 // +------------------------------------------------------------------------------------------+
 // | Contributors:                                                                            |
 // |                                                                                          |
-// |	Chun-Yu Lin                                                                            |
+// |	Chun-Yu Lin                                                                           |
 // |        - National Center for High-performance computing,                                 |
 // |          National Applied Research Laboratories, Hsinchu Science Park,                   |
 // |          Hsinchu City 30076, Taiwan.                                                     |
