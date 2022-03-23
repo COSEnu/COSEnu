@@ -1,4 +1,4 @@
-""" Python interface to read anf set up the simulation(s) according
+""" Python interface to read and set-up the simulation(s) according
 to the specifications given in the lib/config.yaml file.
 """
 try:
@@ -37,7 +37,7 @@ SOURCE = "main.cpp"
 GCC = "g++"
 PCC = "pgc++"
 OPT = "-fast -O3"
-STD = "-O3 -std=c++0x"
+STD = "-std=c++0x"
 
 # --------------------------------------------------------------------------------------------------
 
@@ -245,8 +245,8 @@ def compi(comp_opt = "--acc"):
             return None, None
 
     elif comp_opt == "--mcore":
-        #comp_stat = os.system(f"make")
-        comp_stat = os.system(f"{PCC} {OPT} -ta=multicore -Minfo=accel -o {TARGET} {SOURCE}")
+        comp_stat = os.system(f"make")
+        # comp_stat = os.system(f"{PCC} {OPT} -ta=multicore -Minfo=accel -o {TARGET} {SOURCE}")
         if comp_stat == 0:
             print(f"{TARGET} generated for multicore job")
         else:
@@ -319,17 +319,18 @@ def main(mode, scheme):
         print("Compilation failed")
         return
     
-    if cp_stat == "success":
-        """Run jobs"""
-        run_stat = run(jobs_list, scheme_dir_path)
-    else:
-        print(f"Copying executable failed.")
-        return
+##Uncomment this section to run the jobs automatically.
+#     if cp_stat == "success":
+#         """Run jobs"""
+#         run_stat = run(jobs_list, scheme_dir_path)
+#     else:
+#         print(f"Copying executable failed.")
+#         return
         
-    if run_stat == "success":
-        print("SUCCESS")
-    else:
-        print("FAILED")
+#     if run_stat == "success":
+#         print("SUCCESS")
+#     else:
+#         print("FAILED")
 
 # --------------------------------------------------------------------------------------------------
 

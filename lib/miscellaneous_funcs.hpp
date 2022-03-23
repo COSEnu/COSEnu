@@ -2,7 +2,7 @@
 
 bool file_exists(std::string path)
 {
-    std::ifstream f(path, 'r');
+    std::ifstream f(path.c_str(), std::ios::in);
     if (!f)
     {
         return false;

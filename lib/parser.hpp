@@ -110,8 +110,8 @@ Params::Params(std::string CONFIG_FILE)
     {
         std::cout << "[ FAIL ]...Unable to open "
                   << CONFIG_FILE
-                  << "exitting.\n"
-        exit(EXIT_FAIL);
+                  << "exitting.\n";
+        exit(0);
     }
     while (config)
     {
