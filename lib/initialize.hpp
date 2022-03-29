@@ -5,7 +5,7 @@ void NuOsc::initialize()
     here.
 */
     double signu = 0.6;
-    double sigbnu = 0.53;
+    double sigbnu = 0.5;
     double alpha = 0.9;
 
     std::ofstream g_file(ID + "_G0.bin",std::ofstream::out | std::ofstream::binary);

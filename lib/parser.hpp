@@ -78,6 +78,11 @@ public:
     std::vector<double> zsnap_v;
     int z_snap_interval;
 
+    int n_dump = 0;
+    std::vector<double>v_dumps;
+    int dump_interval = 0;
+
+
     bool is_scheme = false;
     bool is_nz = false;
     bool is_nvz = false;
@@ -221,6 +226,15 @@ Params::Params(std::string CONFIG_FILE)
             {
                 cssl_to_vec(value, zsnap_v);
             }
+            else if (key == "n_dump_rho")
+            {
+                string_to_type(value, n_dump);
+            }
+            else if (key == "dump_rho_v_modes")
+            {
+                cssl_to_vec(value, v_dumps);
+            }
+
             else
             {
                 std::cout << "Redundant or unknown key: " << key << std::endl;
@@ -283,5 +297,13 @@ Params::Params(std::string CONFIG_FILE)
                   << "Exiting." << std::endl;
         exit(0);
     }
+    if (n_dump > 0)
+    {   
+        dump_interval = (int)(N_ITER/n_dump);
+    }   
+    else
+    {   
+        dump_interval = N_ITER + 1;
+    } 
 #endif
 }

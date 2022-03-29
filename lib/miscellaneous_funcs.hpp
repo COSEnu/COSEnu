@@ -15,6 +15,15 @@ bool file_exists(std::string path)
 }
 
 /*---------------------------------------------------------------------------*/
+
+float roundoff(float value, unsigned char prec)
+{
+  float pow_10 = pow(10.0f, (float)prec);
+  return round(value * pow_10) / pow_10;
+}
+
+/*---------------------------------------------------------------------------*/
+
 std::string draw(const int l, const string c)
 {
     // write a string l times on to std::out
@@ -54,7 +63,7 @@ double g(double v, double v0, double sigma)
 
 inline double eps(double z, double z0)
 {
-    return 0.1 * exp(-(z - z0) * (z - z0) / 50.0);
+    return 1e-1 * exp(-(z - z0) * (z - z0) / 50.0);
 }
 
 /*---------------------------------------------------------------------------*/

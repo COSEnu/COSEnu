@@ -313,3 +313,59 @@ void NuOsc::full_snap(const FieldVar *ivstat, std::string mode)
     return;
 }
 /*---------------------------------------------------------------------------*/
+
+void NuOsc::dump_rho_v(const FieldVar *ivstate, const double v, std::string fmode)
+{
+    int vidx = v_idx(v);
+    if(!(vidx >=0 && vidx < nvz))
+    {
+        std::cout << "Inside NuOsc::dump_rho_v(const FieldVar*, const double , std::string)\n"
+                  << "v index = " << vidx << "is out of bound.\n";
+        return;
+    }
+    int prec = (v<0)?5:4;
+
+    std::string rdump_filename = ID + "_rho_v_" + std::to_string(v).substr(0, prec)+".dat";
+    std::ofstream rsnap_ofstream;
+    if (fmode == "create")
+    {   
+        rsnap_ofstream.open(rdump_filename, std::ofstream::out | std::ofstream::trunc);
+    }   
+    else if (fmode == "app")
+    {   
+        rsnap_ofstream.open(rdump_filename, std::ofstream::out | std::ofstream::app);
+    }   
+    else
+    {   
+        std::cout << "Run time err report from snaps.hpp -> void NuOsc::full_snap\n";
+        std::cout << "Unexpected mode: " << fmode << " v_stat full snap aborted.\n";
+        return;
+    }   
+
+    if (!rsnap_ofstream)
+    {   
+        std::cout << "Run time err report from snaps.hpp -> void NuOsc::full_snap\n";
+        std::cout << "Unable to open " << rdump_filename << "\n";
+        return;
+    }   
+    else
+    {   
+        for (int j = 0; j < nz; j++)
+        {
+            int ij = idx(vidx, j); 
+            rsnap_ofstream << Z[j] << "\t"
+                           << 2.0*ivstate->ex_re[ij]/G0->G[ij] << "\t"
+                           << -2.0*ivstate->ex_im[ij]/G0->G[ij] << "\t" 
+                           << (ivstate->ee[ij] - ivstate->xx[ij])/G0->G[ij] << "\t"
+
+                           << 2.0*ivstate->bex_re[ij]/G0->bG[ij] << "\t"
+                           << 2.0*ivstate->bex_im[ij]/G0->bG[ij] << "\t" 
+                           << (ivstate->bee[ij] - ivstate->bxx[ij])/G0->bG[ij] << "\n";
+        }
+        rsnap_ofstream << "\n";
+    }   
+    rsnap_ofstream.close();
+}
+
+/*---------------------------------------------------------------------------*/
+

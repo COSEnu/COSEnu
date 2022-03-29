@@ -197,6 +197,8 @@ def configure(scheme="fv"):
                     'vsnap_z'  : config['vsnap_z'],
                     'n_zsnap'  : config['n_zsnap'],
                     'zsnap_v'  : config['zsnap_v'],
+                    'n_dump_rho' : config['n_dump_rho'],
+                    'dump_rho_v_modes' : config['dump_rho_v_modes'],
                 }
 
                 # ID for the job
@@ -336,11 +338,13 @@ def main(mode, scheme):
 
 if __name__ == "__main__":
     available_options = """ Available options:
+    
         [ INITIALIZE ]
         ==============================================================
         
         [ opt ] : Initialize (= Configure + compile)  the jobs.
-            opt : --score, --mcore, --acc
+            opt : 
+                --score, --mcore, --acc
                 --score : Single core job
                 --mcore : Multicore job
                 --acc   : GPU accelerated job

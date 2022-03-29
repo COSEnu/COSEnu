@@ -170,7 +170,6 @@ int main(int argc, char *argv[])
 	{
 		state.analyse(state.v_stat, P0, 0, 0);
 	}
-
 #endif
 
 
@@ -191,15 +190,20 @@ int main(int argc, char *argv[])
 			state.output_vsnap(pars.vsnap_z[i], 0);
 		}
 
+		// ........... Dumping the einital rho for v_dumps[i] modes ................ //
+		
+		for(int i = 0; i < pars.v_dumps.size(); i++)
+		{
+			state.dump_rho_v(state.v_stat, pars.v_dumps[i], "create");
+		}
+
 		// ........................... Full-snapshot ...............................//
 
 		state.full_snap(state.v_stat, "create");
-
-		// ......................... EVOLVING THE STATE ......................... //
-
 	}
 
 	
+	// ......................... EVOLVING THE STATE ......................... //
 
     auto start = std::chrono::steady_clock::now();
 
@@ -230,9 +234,9 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		// Snapshot of all field variables at all pahese-space and spatial points.
 		if ((t % pars.fullsnap_interval) == 0)
 		{
-			// Snapshot of all field variables at all pahese-space and spatial points.
 			state.full_snap(state.v_stat, "app");
 		}
 
@@ -247,6 +251,15 @@ int main(int argc, char *argv[])
 			// Estimates the survival probabilities.
 			state.surv_prob(state.v_stat, v_stat0, t);
 		}
+		// std::cout << "dump_interval: " << pars.dump_interval << "\n";
+		if(t%pars.dump_interval == 0)
+		{
+			for(int i = 0; i < pars.v_dumps.size(); i++)
+			{
+				state.dump_rho_v(state.v_stat, pars.v_dumps[i], "app");
+			}
+		}
+
 
 		if (t % ((int)(N_ITER) / 10) == 0)
 		{

@@ -109,6 +109,7 @@ public:
         delete flux;
         delete G0;
     }
+
     void set_vac_pars(double pmo_, double omega_, double theta_)
     {
         pmo = pmo_; // 1.0 for normal mass ordering, -1.0 for inverted mass ordering, 0.0 for no vacuum term
@@ -116,13 +117,23 @@ public:
         ct = (1.0/2.0)*omega_ * cos(2.0 * theta);
         st = (1.0/2.0)*omega_ * sin(2.0 * theta);
     }
+
     void set_collective_pars(double mu_)
     {
         mu = mu_;
     }
+
     inline unsigned int idx(const int i, const int j)
     {
         return i * (nz + 2 * gz) + (j + gz);
+    }
+   
+    inline int v_idx(double v){ 
+        return (int)((v-vz0)/dv-0.5);
+    }  
+
+    inline int z_idx(double z){ 
+        return (int)((z-z0)/dz-0.5);
     }
 
     // Simulation specific methods.
@@ -144,6 +155,7 @@ public:
     void output_vsnap(const double, const int);
     void output_zsnap(const double, const int);
     void full_snap(const FieldVar*, std::string );
+    void dump_rho_v(const FieldVar *, const double, std::string);
 
     // Binary file ops
     void write_state(unsigned int);
