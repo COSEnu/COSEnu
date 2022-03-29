@@ -337,39 +337,69 @@ def main(mode, scheme):
 # --------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    available_options = """ Available options:
+    instructions = """ General instructions:
     
         [ INITIALIZE ]
         ==============================================================
-        
-        [ opt ] : Initialize (= Configure + compile)  the jobs.
+        python manage.py [opt] [scheme]
+        [opt] : Initialize (= Configure + compile)  the jobs.
             opt : 
                 --score, --mcore, --acc
                 --score : Single core job
                 --mcore : Multicore job
                 --acc   : GPU accelerated job
-	"""
+            scheme:
+                fv : Simulation using finite volume method with 7th order WENO.
+                fd : Simulation using finite difference method with 3rd order Kreiss-Oliger dissipation.
+	
 
-    sample_templates = """eg:
+    eg:
         Run finite volume scheme     : $ python manage.py  --acc fv 
         Run finite difference scheme : $ python manage.py  --acc fd
+
+
+    
+    To run the code after this, traverse to the job directory and run the 
+    executable by 
+    
+    $./main --id <ID> --conf job.config 
+
+    <ID> here can be anythin to tag the output. name of the job directory is preffered.
+
+    OR
+
+    To restart a truncated job from stored data(in the .bin files), use
+
+    $./main --id <ID> --ff --conf job.config.
+
+    Here <ID> has to be the <ID> used in the truncated job.
 	"""
 
     PWD = os.getcwd()
-    scheme = "--fv"
-    mode = "--mcore"
+    scheme = None
+    mode = None
+    is_scheme = False
+    is_mode = False
+    
     if len(sys.argv) > 1:
         for i in range(1, len(sys.argv)):
-            if sys.argv[i] == "--score" or sys.argv[i] == "--mcore" or sys.argv[i] == "--acc":
+            if sys.argv[i] == "--help":
+                print(instructions)
+            elif sys.argv[i] == "--score" or sys.argv[i] == "--mcore" or sys.argv[i] == "--acc":
                 mode  = sys.argv[i]                
                 i += 1
+                is_mode = True
             elif sys.argv[i] == 'fv' or sys.argv[i] == 'fd':
                 scheme = sys.argv[i]
                 i += 1
+                is_scheme = False
             else:
                 print(f"Unrecognized option {sys.argv[i]}")
-                print(available_options)
+                print(instructions)
                 sys.exit()
 
-    main(mode, scheme)
-    os.chdir(PWD)
+    if (not is_scheme and not is_mode):
+        print(instructions)
+    else:
+        main(mode, scheme)
+        os.chdir(PWD)
