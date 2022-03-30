@@ -3,21 +3,21 @@
 
 void NuOsc::write_state(unsigned int t)
 {
-    std::string file_name = ID + "_state.bin";    
+    std::string file_name = ID + "_state.bin";
     std::string file_name_temp = ID + "_state" + std::to_string(t) + ".bin";
     std::ofstream fpw(file_name_temp, std::ios::out | std::ios::binary);
     long int buffer_size = sizeof(double);
 
-    if(!fpw)
+    if (!fpw)
     {
         std::cout << "Failed call to open " << file_name_temp << " in NuOsc::write_state. \n";
         return;
     }
 
-    fpw.write((char *)&t, sizeof(int)); // First entry is the current iteration 
-    for (int i=0; i<nvz; i++)
+    fpw.write((char *)&t, sizeof(int)); // First entry is the current iteration
+    for (int i = 0; i < nvz; i++)
     {
-        for(int j=0; j<nz; j++)
+        for (int j = 0; j < nz; j++)
         {
             int ij = idx(i, j);
             fpw.write((char *)&v_stat->ee[ij], buffer_size);
@@ -38,20 +38,20 @@ void NuOsc::write_state(unsigned int t)
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::write_state0(const FieldVar * stat0)
+void NuOsc::write_state0(const FieldVar *stat0)
 {
     std::string file_name = ID + "_state0.bin";
     std::ofstream fpw(file_name, std::ios::out | std::ios::binary);
     long int buffer_size = sizeof(double);
 
-    if(!fpw)
+    if (!fpw)
     {
-      std::cout << "Failed call to open " << file_name << " in NuOsc::write_state0. \n";
+        std::cout << "Failed call to open " << file_name << " in NuOsc::write_state0. \n";
     }
 
-    for (int i=0; i<nvz; i++)
+    for (int i = 0; i < nvz; i++)
     {
-        for(int j=0; j<nz; j++)
+        for (int j = 0; j < nz; j++)
         {
             int ij = idx(i, j);
             fpw.write((char *)&stat0->ee[ij], buffer_size);
@@ -72,21 +72,38 @@ void NuOsc::write_state0(const FieldVar * stat0)
 
 int NuOsc::read_state()
 {
-    std::string file_name = ID+"_state.bin";
-    if(!file_exists(file_name)) exit(0);
+    std::string file_name = ID + "_state.bin";
+    bool is_loading_0 = false;
+    if (!file_exists(file_name))
+    {
+        std::cout << "Unable to find " << file_name << "\n";
+        file_name = ID + "_state0.bin";
+        is_loading_0 = true;
+        std::cout << "Loading from " << file_name << ". \n";
+    }
+
     std::ifstream fpr(file_name, std::ios::in | std::ios::binary);
     if (!fpr)
     {
         std::cout << file_name << " did not open. Exiting.\n";
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     int t;
-    fpr.read((char *)&t, sizeof(int));
-    long int buffer_size = sizeof(double);
-    for (int i=0; i<nvz; i++)
+    if (!is_loading_0)
     {
-        for(int j=0; j<nz; j++)
+        fpr.read((char *)&t, sizeof(int));
+    }
+    else
+    {
+        t = 1;
+    }
+
+    std::cout << "Loading from " << file_name << ". \n";
+    long int buffer_size = sizeof(double);
+    for (int i = 0; i < nvz; i++)
+    {
+        for (int j = 0; j < nz; j++)
         {
             int ij = idx(i, j);
             fpr.read((char *)&v_stat->ee[ij], buffer_size);
@@ -106,20 +123,20 @@ int NuOsc::read_state()
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::read_state0(FieldVar * stat0)
+void NuOsc::read_state0(FieldVar *stat0)
 {
-    std::string file_name = ID+"_state0.bin";
+    std::string file_name = ID + "_state0.bin";
     std::ifstream fpr(file_name, std::ios::in | std::ios::binary);
     if (!fpr)
     {
         std::cout << file_name << " does not exist. Exiting.\n";
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     long int buffer_size = sizeof(double);
-    for (int i=0; i<nvz; i++)
+    for (int i = 0; i < nvz; i++)
     {
-        for(int j=0; j<nz; j++)
+        for (int j = 0; j < nz; j++)
         {
             int ij = idx(i, j);
             fpr.read((char *)&stat0->ee[ij], buffer_size);
@@ -149,11 +166,10 @@ void NuOsc::read_G0()
         exit(EXIT_FAILURE);
     }
 
-    
     long int buffer_size = sizeof(double);
-    for (int i=0; i<nvz; i++)
+    for (int i = 0; i < nvz; i++)
     {
-        for(int j=0; j<nz; j++)
+        for (int j = 0; j < nz; j++)
         {
             int ij = idx(i, j);
             g_state_in.read((char *)&G0->G[ij], buffer_size);
@@ -167,7 +183,7 @@ void NuOsc::read_G0()
 /*---------------------------------------------------------------------------*/
 void NuOsc::output_vsnap(double loc, const int t)
 {
-    //Sanity check
+    // Sanity check
     if (!(loc >= z0 && loc <= z1))
     {
         std::cout << "Runtime Warning:" << std::endl;
@@ -219,7 +235,7 @@ void NuOsc::output_vsnap(double loc, const int t)
 /*---------------------------------------------------------------------------*/
 void NuOsc::output_zsnap(const double vmode, const int t)
 {
-    //Sanity check
+    // Sanity check
     if (!(vmode >= vz0 && vmode <= vz1))
     {
         std::cout << "Runtime Warning:" << std::endl;
@@ -296,15 +312,15 @@ void NuOsc::full_snap(const FieldVar *ivstat, std::string mode)
     }
     else
     {
-        for(int i=0; i<nvz; i++)
+        for (int i = 0; i < nvz; i++)
         {
-            for(int j=0; j<nz; j++)
+            for (int j = 0; j < nz; j++)
             {
                 int ij = idx(i, j);
-                vstat_snap_stream << std::fixed << std::setprecision(10) << std::scientific 
-                                << vz[i] << "\t" << Z[j] << "\t" 
-                                << ivstat->ee[ij] << "\t" << ivstat->xx[ij] << "\t" << ivstat->ex_re[ij] << "\t" << ivstat->ex_im[ij] << "\t"
-                                << ivstat->bee[ij] << "\t" << ivstat->bxx[ij] << "\t" << ivstat->bex_re[ij] << "\t" << ivstat->bex_im[ij] << std::endl;
+                vstat_snap_stream << std::fixed << std::setprecision(10) << std::scientific
+                                  << vz[i] << "\t" << Z[j] << "\t"
+                                  << ivstat->ee[ij] << "\t" << ivstat->xx[ij] << "\t" << ivstat->ex_re[ij] << "\t" << ivstat->ex_im[ij] << "\t"
+                                  << ivstat->bee[ij] << "\t" << ivstat->bxx[ij] << "\t" << ivstat->bex_re[ij] << "\t" << ivstat->bex_im[ij] << std::endl;
             }
             vstat_snap_stream << std::endl;
         }
@@ -317,55 +333,54 @@ void NuOsc::full_snap(const FieldVar *ivstat, std::string mode)
 void NuOsc::dump_rho_v(const FieldVar *ivstate, const double v, std::string fmode)
 {
     int vidx = v_idx(v);
-    if(!(vidx >=0 && vidx < nvz))
+    if (!(vidx >= 0 && vidx < nvz))
     {
         std::cout << "Inside NuOsc::dump_rho_v(const FieldVar*, const double , std::string)\n"
                   << "v index = " << vidx << "is out of bound.\n";
         return;
     }
-    int prec = (v<0)?5:4;
+    int prec = (v < 0) ? 5 : 4;
 
-    std::string rdump_filename = ID + "_rho_v_" + std::to_string(v).substr(0, prec)+".dat";
+    std::string rdump_filename = ID + "_rho_v_" + std::to_string(v).substr(0, prec) + ".dat";
     std::ofstream rsnap_ofstream;
     if (fmode == "create")
-    {   
+    {
         rsnap_ofstream.open(rdump_filename, std::ofstream::out | std::ofstream::trunc);
-    }   
+    }
     else if (fmode == "app")
-    {   
+    {
         rsnap_ofstream.open(rdump_filename, std::ofstream::out | std::ofstream::app);
-    }   
+    }
     else
-    {   
+    {
         std::cout << "Run time err report from snaps.hpp -> void NuOsc::full_snap\n";
         std::cout << "Unexpected mode: " << fmode << " v_stat full snap aborted.\n";
         return;
-    }   
+    }
 
     if (!rsnap_ofstream)
-    {   
+    {
         std::cout << "Run time err report from snaps.hpp -> void NuOsc::full_snap\n";
         std::cout << "Unable to open " << rdump_filename << "\n";
         return;
-    }   
+    }
     else
-    {   
+    {
         for (int j = 0; j < nz; j++)
         {
-            int ij = idx(vidx, j); 
+            int ij = idx(vidx, j);
             rsnap_ofstream << Z[j] << "\t"
-                           << 2.0*ivstate->ex_re[ij]/G0->G[ij] << "\t"
-                           << -2.0*ivstate->ex_im[ij]/G0->G[ij] << "\t" 
-                           << (ivstate->ee[ij] - ivstate->xx[ij])/G0->G[ij] << "\t"
+                           << 2.0 * ivstate->ex_re[ij] / G0->G[ij] << "\t"
+                           << -2.0 * ivstate->ex_im[ij] / G0->G[ij] << "\t"
+                           << (ivstate->ee[ij] - ivstate->xx[ij]) / G0->G[ij] << "\t"
 
-                           << 2.0*ivstate->bex_re[ij]/G0->bG[ij] << "\t"
-                           << 2.0*ivstate->bex_im[ij]/G0->bG[ij] << "\t" 
-                           << (ivstate->bee[ij] - ivstate->bxx[ij])/G0->bG[ij] << "\n";
+                           << 2.0 * ivstate->bex_re[ij] / G0->bG[ij] << "\t"
+                           << 2.0 * ivstate->bex_im[ij] / G0->bG[ij] << "\t"
+                           << (ivstate->bee[ij] - ivstate->bxx[ij]) / G0->bG[ij] << "\n";
         }
         rsnap_ofstream << "\n";
-    }   
+    }
     rsnap_ofstream.close();
 }
 
 /*---------------------------------------------------------------------------*/
-
