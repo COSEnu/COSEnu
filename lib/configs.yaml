@@ -3,16 +3,16 @@
 #----------------------------------------------------------------#
 
 # Spatial domain specifics.
-zrange :  [-600, 600]
-nzs    :  [2000,]
-CFLS   :  [0.2,]
+zrange :  [-5120.0, 5120.0]
+nzs    :  [10240, ] #[10240,]
+CFLS   :  [0.4,]
 
 #----------------------------------------------------------------#
 
 # Phase-space specifics.
 v0     : -1.0
 v1     :  1.0
-nvzs   :  [64, ]
+nvzs   :  [200, ]
 
 #----------------------------------------------------------------#
 
@@ -20,7 +20,7 @@ boundary : periodic  # Options ->  periodic, open
 
 #----------------------------------------------------------------#
 
-end_time  : 600 # Physical end time
+end_time  : 5000.01 # Physical end time
 
 #----------------------------------------------------------------#
 
@@ -41,27 +41,27 @@ mu : 1.0                  # \sqrt{2} G_F n_{\nu_e}
 #----------------------------------------------------------------#
 
 # To analyze the behaviour of the conserved quantities.
-n_analyze : 100 # Total number of analysis to be carried out per job.
+n_analyze : 2500 # Total number of analysis to be carried out per job.
 
-# To capture the evolution of the field variables for all the velocities over entire domain.
-n_fullsnap : 3
+# To capture the evolution of the field variables for all the velocities over entire domain. (in addition to the initial state)
+n_fullsnap : 1 #500
 
 # To capture the evolution of the field variables for all th velocity modes at given locations.
-n_vsnap     : 5           # snapshot of phase-space at vsnap_zlocs
-vsnap_z : [-300, 0, 300]  # z-locations for phsse-space snapshots.
+n_vsnap     : 1           # snapshot of phase-space at vsnap_zlocs
+vsnap_z : [0]  # z-locations for phsse-space snapshots.
 
 # To capture the evolution of the field variables for given modes over the entire domain.
-n_zsnap     : 5              # snapshot of entire domain for the v_modes at zsnap_vmodes
+n_zsnap     : 1              # snapshot of entire domain for the v_modes at zsnap_vmodes
                              # between time = 0 and time = end_time
-zsnap_v : [-1, -0.5, 0.5, 1] # velocity modes for full spatial domain snapshots.
+zsnap_v : [0.5] # velocity modes for full spatial domain snapshots.
 
-n_dump_rho : 100  # number of times density matrix elements has to be dumped.
-dump_rho_v_modes : [-1, -0.5, 0.5, 1.0] # velocity for which the density matrix elements to be dumped.
+n_dump_rho : 1  # number of times density matrix elements has to be dumped.
+dump_rho_v_modes : [0.5] # velocity for which the density matrix elements to be dumped.
 
 #----------------------------------------------------------------#
 
 # Folder names
-folder_fv : "output_from_fv"
-folder_fd : "output_from_fd"
+folder_fv : "code_comparison_fv"
+folder_fd : "code_comparison_fd"
 
 #----------------------------------------------------------------#

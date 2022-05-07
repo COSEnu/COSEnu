@@ -288,15 +288,17 @@ void NuOsc::output_zsnap(const double vmode, const int t)
 
 void NuOsc::full_snap(const FieldVar *ivstat, std::string mode)
 {
-    std::string full_snap_filename = ID + "_v_stat_snap.dat";
+    std::string full_snap_filename = ID + "_v_stat_fullsnap.dat";
     std::ofstream vstat_snap_stream;
     if (mode == "create")
     {
         vstat_snap_stream.open(full_snap_filename, std::ofstream::out | std::ofstream::trunc);
+        vstat_snap_stream << "#phys_time = " << phy_time << "\n";
     }
     else if (mode == "app")
     {
         vstat_snap_stream.open(full_snap_filename, std::ofstream::out | std::ofstream::app);
+        vstat_snap_stream << "\n" << "#phys_time = " << phy_time << "\n";
     }
     else
     {
@@ -317,10 +319,14 @@ void NuOsc::full_snap(const FieldVar *ivstat, std::string mode)
             for (int j = 0; j < nz; j++)
             {
                 int ij = idx(i, j);
-                vstat_snap_stream << std::fixed << std::setprecision(10) << std::scientific
+                vstat_snap_stream << std::fixed << std::setprecision(20) << std::scientific
                                   << vz[i] << "\t" << Z[j] << "\t"
+                                  << 2.0 * ivstat->ex_re[ij] / G0->G[ij] << "\t" << "\t" << -2.0 * ivstat->ex_im[ij] / G0->G[ij] << "\t" << ((ivstat->ee[ij]-ivstat->xx[ij])/ G0->G[ij] ) << "\t"
+                                  << 2.0 * ivstat->bex_re[ij] / G0->bG[ij] << "\t" << "\t" << 2.0 * ivstat->bex_im[ij] / G0->bG[ij] << "\t" << ((ivstat->bee[ij]-ivstat->bxx[ij])/ G0->bG[ij] ) << std::endl;
+/*dump out rho
                                   << ivstat->ee[ij] << "\t" << ivstat->xx[ij] << "\t" << ivstat->ex_re[ij] << "\t" << ivstat->ex_im[ij] << "\t"
                                   << ivstat->bee[ij] << "\t" << ivstat->bxx[ij] << "\t" << ivstat->bex_re[ij] << "\t" << ivstat->bex_im[ij] << std::endl;
+*/
             }
             vstat_snap_stream << std::endl;
         }

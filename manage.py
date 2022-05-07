@@ -208,7 +208,7 @@ def configure(scheme="fv"):
                 z1 = z[1]
                 dz = (z1-z0)/nz
                 dt = abs(CFL*dz/v1)
-                N_ITER = int(end_time/dt)
+                N_ITER = int(end_time/dt)+1
 
                 if nanalyze != 0:
                     ANAL_EVERY = int(N_ITER/nanalyze)

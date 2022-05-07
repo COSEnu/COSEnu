@@ -169,7 +169,8 @@ public:
     // Edit these functions as per the requirement.
     void cal_pol(const FieldVar *, Pol *);
     void cal_Mn(M *, const Pol *, unsigned int);
-    void dcon(const Pol*, const Pol*, M*, int);
+    void cal_eELN(real *, const Pol *);
+    void dcon(const Pol*, const Pol*, M*, int, real);
     void analyse(const FieldVar *, const Pol *, uint, uint);
     void surv_prob(const FieldVar *, const FieldVar *, const uint );
     void v_distr_of_surv_prob(const FieldVar *, const FieldVar *, const uint );

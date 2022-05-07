@@ -273,6 +273,7 @@ int main(int argc, char *argv[])
 					  << std::endl;
 		}
 	}
+        state.full_snap(state.v_stat, "app"); // output the final snapshot
 
 #ifdef COLL_OSC_ON
 	// Estimate the angular distribution of the surviuval probabilities

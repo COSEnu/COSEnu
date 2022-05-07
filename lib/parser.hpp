@@ -275,7 +275,8 @@ Params::Params(std::string CONFIG_FILE)
     // Full snapshots
     if ( n_fullsnap > 0)
 	{
-	    fullsnap_interval = (int)(N_ITER / n_vsnap);
+	    fullsnap_interval = (int)(N_ITER / n_fullsnap);
+            printf("%d %d %d\n",N_ITER,n_fullsnap,fullsnap_interval);
 	}
 	else
 	{

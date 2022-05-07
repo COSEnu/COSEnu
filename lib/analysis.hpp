@@ -12,11 +12,13 @@ void NuOsc::analyse(const FieldVar *ivstate, const Pol *P0, uint n, uint t)
     /****************************************************************************************/
     Pol *P = new Pol(size);
     M *M_0 = new M(0);
-
+    real eELN;
+  
     cal_pol(ivstate, P); // Calculating the components of polarization.
     cal_Mn(M_0, P, 0);    // Calculating the components of M_0
-
-    dcon(P, P0, M_0, t);
+    cal_eELN(&eELN,P);
+ 
+    dcon(P, P0, M_0, t, eELN);
 
     delete P;
     delete M_0;
@@ -45,6 +47,25 @@ void NuOsc::cal_pol(const FieldVar *inField, Pol *inP)
 
 /*---------------------------------------------------------------------------*/
 
+void NuOsc::cal_eELN(real *eELN, const Pol *inP)
+{
+    /*
+        Subroutine to calculate the ELN error.
+    */
+    real nor;
+    nor=0.0;
+    for (int i = 0; i < nvz; i++)
+    {
+        for (int j = 0; j < nz; j++)
+        {
+            *eELN += 0.5*(G0->G[idx(i, j)] * (1.0-inP->P3[idx(i, j)]) - G0->bG[idx(i, j)] * (1.0-inP->bP3[idx(i, j)])) * dz * dv;
+            nor += (G0->G[idx(i, j)] + G0->bG[idx(i, j)])*dz*dv;
+        }
+    }
+    *eELN=*eELN/nor;
+}
+/*---------------------------------------------------------------------------*/
+
 void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 {
     /*
@@ -66,7 +87,7 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 
 /*---------------------------------------------------------------------------*/
 
-void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
+void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t, real eELN)
 {
     /*
         Estimates the deviation of conserved quantities from their initial values and write them ot the
@@ -91,7 +112,7 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
     {
         if (t == 0)
         {
-            con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t), |M0|]\n";
+            con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), |M0|, eELN]\n";
         }
         double dP    = 0.0;
         double dbP   = 0.0;
@@ -116,12 +137,14 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
                 Nbee0 += G0->bG[ij];
             }
         }
-        con_qty_ofstream << t << "\t"
+        con_qty_ofstream << phy_time << "\t"
                          << std::fixed << std::setprecision(20)
+                         << std::scientific
                          << ((dP >= dbP) ? dP : dbP) << "\t"
                          << avdP / Nee0 << "\t"
                          << avbdP / Nbee0 << "\t"
-                         << M_0->norm << endl;
+                         << M_0->norm << "\t" 
+                         << eELN << endl;
 
         con_qty_ofstream.close();
     }
@@ -140,6 +163,7 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
     if (t == 0)
     {
         surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
+        surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
     }
     else
     {
@@ -152,7 +176,7 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
     }
     else
     {
-        surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
+//        surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
     }
     double num_Pee   = 0;
     double num_Pbee  = 0;
@@ -163,16 +187,25 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
     {
         for (int j = 0; j < nz; j++)
         {
-            num_Pee   += ivstate->ee[idx(i, j)] * dz * dv;
-            num_Pbee  += ivstate->bee[idx(i, j)] * dz * dv;
-            dnom_Pee  += ivstate0->ee[idx(i, j)] * dz * dv;
-            dnom_Pbee += ivstate0->bee[idx(i, j)] * dz * dv;
+            num_Pee   += (G0->G[idx(i, j)] - ivstate->ee[idx(i, j)]) * dz * dv;
+            num_Pbee  += (G0->bG[idx(i, j)] - ivstate->bee[idx(i, j)]) * dz * dv;
+            dnom_Pee  += G0->G[idx(i, j)] * dz * dv;
+            dnom_Pbee += G0->bG[idx(i, j)] * dz * dv;
+//            num_Pee   += ivstate->ee[idx(i, j)] * dz * dv;
+//            num_Pbee  += ivstate->bee[idx(i, j)] * dz * dv;
+//          dnom_Pee  += G0->G[idx(i, j)] * dz * dv;
+//          dnom_Pbee += G0->bG[idx(i, j)] * dz * dv;
+//            dnom_Pee  += ivstate0->ee[idx(i, j)] * dz * dv;
+//            dnom_Pbee += ivstate0->bee[idx(i, j)] * dz * dv;
         }
     }
-    surv_prob_ofstream << time << "\t"
+    surv_prob_ofstream << phy_time << "\t"
+                       << std::setprecision(20)
                        << std::scientific
-                       << num_Pee / dnom_Pee << "\t"
-                       << num_Pbee / dnom_Pbee << std::endl;
+                       << (dnom_Pee-num_Pee) / dnom_Pee << "\t"
+                       << (dnom_Pbee-num_Pbee) / dnom_Pbee << std::endl;
+//                       << num_Pee / dnom_Pee << "\t"
+//                       << num_Pbee / dnom_Pbee << std::endl;
 
     surv_prob_ofstream.close();
 }
@@ -186,7 +219,7 @@ void NuOsc::v_distr_of_surv_prob(const FieldVar *ivstate, const FieldVar *ivstat
     */
 
     std::ofstream av_spv_ofstream;
-    std::string av_spv_fname = "dom_avrgd_surv_prob_" + std::to_string(t) + "_.dat";
+    std::string av_spv_fname = "dom_avrgd_surv_prob_" + std::to_string(t) + ".dat";
     av_spv_ofstream.open(av_spv_fname, std::ofstream::out | std::ofstream::trunc);
     if (!av_spv_ofstream)
     {
