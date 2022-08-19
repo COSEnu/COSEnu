@@ -15,9 +15,9 @@ void NuOsc::write_state(unsigned int t)
     }
 
     fpw.write((char *)&t, sizeof(int)); // First entry is the current iteration
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             int ij = idx(i, j);
             fpw.write((char *)&v_stat->ee[ij], buffer_size);
@@ -49,9 +49,9 @@ void NuOsc::write_state0(const FieldVar *stat0)
         std::cout << "Failed call to open " << file_name << " in NuOsc::write_state0. \n";
     }
 
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             int ij = idx(i, j);
             fpw.write((char *)&stat0->ee[ij], buffer_size);
@@ -101,9 +101,9 @@ int NuOsc::read_state()
 
     std::cout << "Loading from " << file_name << ". \n";
     long int buffer_size = sizeof(double);
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             int ij = idx(i, j);
             fpr.read((char *)&v_stat->ee[ij], buffer_size);
@@ -134,9 +134,9 @@ void NuOsc::read_state0(FieldVar *stat0)
     }
 
     long int buffer_size = sizeof(double);
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             int ij = idx(i, j);
             fpr.read((char *)&stat0->ee[ij], buffer_size);
@@ -167,9 +167,9 @@ void NuOsc::read_G0()
     }
 
     long int buffer_size = sizeof(double);
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             int ij = idx(i, j);
             g_state_in.read((char *)&G0->G[ij], buffer_size);
@@ -312,9 +312,9 @@ void NuOsc::full_snap(const FieldVar *ivstat, std::string mode)
     }
     else
     {
-        for (int i = 0; i < nvz; i++)
+        for (int j = 0; j < nz; j++)
         {
-            for (int j = 0; j < nz; j++)
+            for (int i = 0; i < nvz; i++)
             {
                 int ij = idx(i, j);
                 vstat_snap_stream << std::fixed << std::setprecision(10) << std::scientific
