@@ -18,8 +18,10 @@ struct FieldVar {
         bxx    = new double[size];
         bex_re = new double[size];
         bex_im = new double[size];
+        #pragma acc enter data create(this,ee[0:size],xx[0:size],ex_re[0:size],ex_im[0:size],bee[0:size],bxx[0:size],bex_re[0:size],bex_im[0:size])
     }
     ~FieldVar() {
+        #pragma acc exit data delete(ee, xx, ex_re, ex_im, bee, bxx, bex_re, bex_im, this)
         delete[] ee;
         delete[] xx;
         delete[] ex_re;
@@ -39,8 +41,10 @@ struct Flux{
     Flux(int size){
         rflux = new FieldVar(size);
         lflux = new FieldVar(size);
+        #pragma acc enter data create(this,rflux,lflux)
     }
     ~Flux(){
+        #pragma acc exit data delete(rflux,lflux,this)
         delete rflux;
         delete lflux;
     }

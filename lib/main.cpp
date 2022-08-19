@@ -38,6 +38,13 @@ using std::cout;
 using std::endl;
 using std::string;
 
+#include <omp.h>
+#ifdef _OPENACC
+#include <openacc.h>
+#endif
+
+
+
 #include "presets.hpp"
 #include "structures.hpp"
 #include "miscellaneous_funcs.hpp"
@@ -144,7 +151,7 @@ int main(int argc, char *argv[])
 		*/
 		state.initialize();
 		state.copy_state(state.v_stat, v_stat0);
-		state.write_state0(v_stat0);
+		//state.write_state0(v_stat0);
 		t0  = 1;
 	}
 	else
@@ -156,7 +163,7 @@ int main(int argc, char *argv[])
 		t0 = state.read_state();
 		state.read_state0(v_stat0);
 	}
-	std::cout << "Starting time = " << t0 << "\n";
+	std::cout << "Starting timestep = " << t0 << "\n";
 
 
 	//......................... EVALUATING INITIAL STATE .........................//
@@ -172,7 +179,7 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-
+        #if !defined(BENCHMARK)
 	if(!is_ff)
 	{
 		state.surv_prob(state.v_stat, v_stat0, 0);
@@ -201,16 +208,16 @@ int main(int argc, char *argv[])
 
 		state.full_snap(state.v_stat, "create");
 	}
-
-	
+        #endif
 	// ......................... EVOLVING THE STATE ......................... //
 
-    auto start = std::chrono::steady_clock::now();
-
+	real stepms;
+	auto start = std::chrono::high_resolution_clock::now();
 	for (int t = t0; t < N_ITER; t++)
 	{
 		state.step_rk4();
 
+                #if !defined(BENCHMARK)
 		// ...................... Phase-space snapshots ....................... //
 		// Angular space snapshot of all firld variable at the location = pars.vsnap_z[i]
 		// and time = t.
@@ -259,8 +266,6 @@ int main(int argc, char *argv[])
 				state.dump_rho_v(state.v_stat, pars.v_dumps[i], "app");
 			}
 		}
-
-
 		if (t % ((int)(N_ITER) / 10) == 0)
 		{
 			// Write the state of the field variable to a binary file
@@ -272,12 +277,19 @@ int main(int argc, char *argv[])
 					  << (int)(t * 100.0 / (N_ITER - 1)) << " %"
 					  << std::endl;
 		}
+                #endif
+
+		if ( t==5 || t==10 || t==100 || t==1000 || t==N_ITER-1) {
+		    auto t2 = std::chrono::high_resolution_clock::now();
+		    stepms = std::chrono::duration_cast<std::chrono::milliseconds>(t2-start).count();
+		    printf("%d Walltime:  %.3f secs/T, %.3f ns per step-grid.\n", t, stepms/state.phy_time/1000, stepms/(t+1)/state.size*1e6);
+		}
 	}
 
 #ifdef COLL_OSC_ON
 	// Estimate the angular distribution of the surviuval probabilities
 	// at the end of the simulation.
-	state.v_distr_of_surv_prob(state.v_stat, v_stat0, N_ITER - 1);
+	// state.v_distr_of_surv_prob(state.v_stat, v_stat0, N_ITER - 1);
 	delete P0;
 #endif
 
@@ -291,7 +303,7 @@ int main(int argc, char *argv[])
     std::ofstream xtf;
     xtf.open(ID+"time.txt", std::ofstream::out | std::ofstream::trunc);
     auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::chrono::duration<double> elapsed_seconds = std::chrono::high_resolution_clock::now() - start;
     xtf << ID << "\t" <<  elapsed_seconds.count() << std::endl;
     xtf.close();
     std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
