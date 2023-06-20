@@ -105,7 +105,10 @@ public:
     {
         delete[] vz;
         delete[] Z;
-        delete v_stat, v_rhs, v_pre, v_cor;
+        delete v_stat;
+        delete v_rhs;
+        delete v_pre;
+        delete v_cor;
         delete flux;
         delete G0;
     }

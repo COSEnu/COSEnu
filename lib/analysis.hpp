@@ -14,7 +14,7 @@ void NuOsc::analyse(const FieldVar *ivstate, const Pol *P0, uint n, uint t)
     M *M_0 = new M(0);
 
     cal_pol(ivstate, P); // Calculating the components of polarization.
-    cal_Mn(M_0, P, 0);    // Calculating the components of M_0
+    cal_Mn(M_0, P, 0);   // Calculating the components of M_0
 
     dcon(P, P0, M_0, t);
 
@@ -48,7 +48,7 @@ void NuOsc::cal_pol(const FieldVar *inField, Pol *inP)
 void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
 {
     /*
-        Subroutine to calculate the moments. L(vz[i], n) returns the legendre polynomial 
+        Subroutine to calculate the moments. L(vz[i], n) returns the legendre polynomial
         of order n (up to n=5) for the mode vz[i]
     */
     for (int i = 0; i < nvz; i++)
@@ -93,11 +93,11 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
         {
             con_qty_ofstream << "# [time, dP_max(t), <dP>(t), <dbP(t), <dP>(t), |M0|]\n";
         }
-        double dP    = 0.0;
-        double dbP   = 0.0;
-        double Nee0  = 0.0;
+        double dP = 0.0;
+        double dbP = 0.0;
+        double Nee0 = 0.0;
         double Nbee0 = 0.0;
-        double avdP  = 0.0;
+        double avdP = 0.0;
         double avbdP = 0.0;
 
         for (int i = 0; i < nvz; i++)
@@ -106,13 +106,13 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
             {
                 int ij = idx(i, j);
 
-                dP  = (dP >= fabs(P->normP[ij] - P0->normP[ij])) ? dP : fabs(P->normP[ij] - P0->normP[ij]);
+                dP = (dP >= fabs(P->normP[ij] - P0->normP[ij])) ? dP : fabs(P->normP[ij] - P0->normP[ij]);
                 dbP = (dbP >= fabs(P->normbP[ij] - P0->normbP[ij])) ? dbP : fabs(P->normbP[ij] - P0->normbP[ij]);
 
-                avdP  += fabs(P->normP[ij] - P0->normP[ij]) * G0->G[ij];
+                avdP += fabs(P->normP[ij] - P0->normP[ij]) * G0->G[ij];
                 avbdP += fabs(P->normbP[ij] - P0->normbP[ij]) * G0->bG[ij];
 
-                Nee0  += G0->G[ij];
+                Nee0 += G0->G[ij];
                 Nbee0 += G0->bG[ij];
             }
         }
@@ -140,6 +140,13 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
     if (t == 0)
     {
         surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
+        
+        if (!surv_prob_ofstream)
+        {
+            std::cout << "Unable to open " << surv_prob_fname << std::endl;
+            return;
+        }
+        surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
     }
     else
     {
@@ -149,27 +156,25 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
     if (!surv_prob_ofstream)
     {
         std::cout << "Unable to open " << surv_prob_fname << std::endl;
+        return;
     }
-    else
-    {
-        surv_prob_ofstream << "# [time, <Pee>, <Pbee>]" << std::endl;
-    }
-    double num_Pee   = 0;
-    double num_Pbee  = 0;
-    double dnom_Pee  = 0;
+
+    double num_Pee = 0;
+    double num_Pbee = 0;
+    double dnom_Pee = 0;
     double dnom_Pbee = 0;
 
     for (int i = 0; i < nvz; i++)
     {
         for (int j = 0; j < nz; j++)
         {
-            num_Pee   += ivstate->ee[idx(i, j)] * dz * dv;
-            num_Pbee  += ivstate->bee[idx(i, j)] * dz * dv;
-            dnom_Pee  += ivstate0->ee[idx(i, j)] * dz * dv;
+            num_Pee += ivstate->ee[idx(i, j)] * dz * dv;
+            num_Pbee += ivstate->bee[idx(i, j)] * dz * dv;
+            dnom_Pee += ivstate0->ee[idx(i, j)] * dz * dv;
             dnom_Pbee += ivstate0->bee[idx(i, j)] * dz * dv;
         }
     }
-    surv_prob_ofstream << time << "\t"
+    surv_prob_ofstream << t << "\t"
                        << std::scientific
                        << num_Pee / dnom_Pee << "\t"
                        << num_Pbee / dnom_Pbee << std::endl;
@@ -199,16 +204,16 @@ void NuOsc::v_distr_of_surv_prob(const FieldVar *ivstate, const FieldVar *ivstat
     }
     for (int i = 0; i < nvz; i++)
     {
-        double P_ee   = 0;
-        double P_bee  = 0;
-        double P_ee0  = 0;
+        double P_ee = 0;
+        double P_bee = 0;
+        double P_ee0 = 0;
         double P_bee0 = 0;
 
         for (int j = 0; j < nz; j++)
         {
-            P_ee   += ivstate->ee[idx(i, j)] * dz;
-            P_bee  += ivstate->bee[idx(i, j)] * dz;
-            P_ee0  += ivstate0->ee[idx(i, j)] * dz;
+            P_ee += ivstate->ee[idx(i, j)] * dz;
+            P_bee += ivstate->bee[idx(i, j)] * dz;
+            P_ee0 += ivstate0->ee[idx(i, j)] * dz;
             P_bee0 += ivstate0->bee[idx(i, j)] * dz;
         }
         av_spv_ofstream << std::scientific << vz[i] << "\t"
@@ -219,4 +224,3 @@ void NuOsc::v_distr_of_surv_prob(const FieldVar *ivstate, const FieldVar *ivstat
 }
 
 /*------------------------------- EOF ------------------------------------*/
-
