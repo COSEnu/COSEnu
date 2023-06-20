@@ -5,7 +5,7 @@
 # Spatial domain specifics.
 zrange :  [-600, 600]
 nzs    :  [2000,]
-CFLS   :  [0.2,]
+CFLS   :  [0.4,]
 
 #----------------------------------------------------------------#
 
@@ -65,3 +65,8 @@ folder_fv : "output_from_fv"
 folder_fd : "output_from_fd"
 
 #----------------------------------------------------------------#
+
+jdl : 
+  ncpu : 16
+  memory : 2048M
+  disk : 10G

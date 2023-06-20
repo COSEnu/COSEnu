@@ -1,0 +1,12 @@
+universe = vanilla
+request_cpus = 16
+request_memory = 2048M
+request_disk = 10G
+error = $(process).err
+output = $(process).out
+log = $(process).log
+executable = main
+arguments = --id 2000_64_0.2 --conf job.config
+should_transfer_files = yes
+transfer_input_files = job.config
+queue 1

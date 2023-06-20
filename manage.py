@@ -100,8 +100,11 @@ jobs_list_file = "jobs_list.txt"
 # A job.config file will be added to each job folder
 job_config_file = ""
 
+config_file = "job.config"
+
 # For submitting with condor
-condor_conf = os.path.join(resources_dir, "condor.conf")
+condor_submission_file = "submit.jdl"
+
 
 # --------------------------------------------------------------------------------------------------
 
@@ -249,7 +252,6 @@ def configure(scheme="fv"):
                 model_dir = os.path.join(scheme_dir, config_id)
 
                 # Config file for the job "ID"
-                config_file = f"job.config"
 
                 config_list.append({"id": config_id, "file": config_file})
 
@@ -330,21 +332,50 @@ def cp_exe(scheme_dir_path, exe_path):
     
 # --------------------------------------------------------------------------------------------------
 
-def run(jobs_list, scheme_dir_path):
+def run(jobs_list, scheme_dir_path, submit_mod):
     pwd = os.getcwd()
     for job in jobs_list:
         os.chdir(os.path.join(scheme_dir_path, job))
-        os.system(f"./{TARGET} --id {job} --conf job.config")
+        if submit_mod == "loc":
+            os.system(f"./{TARGET} --id {job} --conf {config_file}")
+
+        elif submit_mod == "condor":
+
+            print (f"Submitting {job} with {submit_mod}")
+
+            with open (os.path.join(pwd, batch_configs_file), 'r') as f:
+
+                configs = yaml.load(f, Loader=yaml.FullLoader)
+
+            jdl_configs = configs["jdl"]
+
+            with open (condor_submission_file, 'w') as f:
+                f.write ("universe = vanilla" + "\n")
+                f.write (f"request_cpus = {jdl_configs['ncpu']}" + "\n")
+                f.write (f"request_memory = {jdl_configs['memory']}" + "\n")
+                f.write (f"request_disk = {jdl_configs['disk']}" + "\n")
+                f.write ("error = $(process).err" + "\n")
+                f.write ("output = $(process).out" + "\n")
+                f.write ("log = $(process).log" + "\n")
+                f.write (f"executable = {TARGET}" + "\n")
+                f.write (f"arguments = --id {job} --conf {config_file}" + "\n")
+                f.write ("should_transfer_files = yes" + "\n")
+                f.write (f"transfer_input_files = {config_file}" + "\n")
+                f.write ("queue 1")
+
+        os.system(f"condor_submit {condor_submission_file}")
         os.chdir(pwd)
+
     return "success"
 
 # --------------------------------------------------------------------------------------------------
 
-def main(mode, scheme):
+def main(mode, scheme, submit_mod = "loc", do_submit = False):
     conf_stat = "failed"  # Configuration status
     compi_stat = "failed" # Compilation status
     cp_stat = "failed"    # Copy status
     run_stat = "failed"   # Run status
+
 
     """Configure"""
     conf_stat, scheme_dir_path = configure(scheme)
@@ -362,18 +393,21 @@ def main(mode, scheme):
         print("Compilation failed")
         return
     
-##Uncomment this section to run the jobs automatically.
-#     if cp_stat == "success":
-#         """Run jobs"""
-#         run_stat = run(jobs_list, scheme_dir_path)
-#     else:
-#         print(f"Copying executable failed.")
-#         return
+#Uncomment this section to run the jobs automatically.
+    if (cp_stat == "success") and do_submit:
+        """Run jobs"""
+        run_stat = run(jobs_list, scheme_dir_path, submit_mod)
+    else:
+        if (not do_submit):
+            print(f"Copying executable failed.")
+        else:
+            print ("You chose not to submit the job.")
+        return
         
-#     if run_stat == "success":
-#         print("SUCCESS")
-#     else:
-#         print("FAILED")
+    if run_stat == "success":
+        print("SUCCESS")
+    else:
+        print("FAILED")
 
 # --------------------------------------------------------------------------------------------------
 
@@ -384,26 +418,40 @@ if __name__ == "__main__":
     mode = None
     is_scheme = False
     is_mode = False
+    submit_mod = "loc"
+    do_submit = False
     
     if len(sys.argv) > 1:
         for i in range(1, len(sys.argv)):
+
             if sys.argv[i] == "--help":
                 print(instructions)
-            elif sys.argv[i] == "--score" or sys.argv[i] == "--mcore" or sys.argv[i] == "--acc":
+                break
+
+            elif (sys.argv[i] == "--score") or (sys.argv[i] == "--mcore") or (sys.argv[i] == "--acc"):
                 mode  = sys.argv[i]                
                 i += 1
                 is_mode = True
+                print (f"compilation mode set to {mode}")
+
             elif sys.argv[i] == 'fv' or sys.argv[i] == 'fd':
                 scheme = sys.argv[i]
                 i += 1
-                is_scheme = False
-            else:
-                print(f"Unrecognized option {sys.argv[i]}")
-                print(instructions)
-                sys.exit()
+                is_scheme = True
+                print(f"Simulation scheme is set to {scheme}")
+
+            elif sys.argv[i] == "--s":
+                submit_mod = sys.argv[i+1]
+                do_submit = True
+                print(f"Submission option set to {submit_mod}")
+
+    if not (is_mode and is_scheme):
+        print ("You have not specified either the simulation [scheme] or compilation [opt]")
+        print(instructions)
+        sys.exit()
 
     if (not is_scheme and not is_mode):
         print(instructions)
     else:
-        main(mode, scheme)
+        main(mode, scheme, submit_mod = submit_mod, do_submit= do_submit)
         os.chdir(PWD)
