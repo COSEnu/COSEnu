@@ -1,0 +1,26 @@
+##################################################
+           Simulation state created
+..................................................
+	SCHEME: FV
+	z : (-600, 600)
+	vz: (-0.984375, 0.984375)
+	(Nvz, Nz): (64, 2000)
+	gz: 4
+	CFL: 0.4
+##################################################
+         NUMBER OFITERATIONS: 2500
+Simulation state initialized.
+Starting time = 1
+ 10 %
+ 20 %
+ 30 %
+ 40 %
+ 50 %
+ 60 %
+ 70 %
+ 80 %
+ 90 %
+ 100 %
+
+SIMULATION COMPLETED
+elapsed time: 229.9s
