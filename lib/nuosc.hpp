@@ -65,8 +65,18 @@ public:
         v_rhs = new FieldVar(size);
         v_pre = new FieldVar(size);
         v_cor = new FieldVar(size);
+        #pragma acc enter data create(v_stat[0:1], v_rhs[0:1], v_pre[0:1], v_cor[0:1]) attach(v_stat, v_rhs, v_pre, v_cor)
         flux = new Flux(size);
+        #pragma acc enter data create(flux[0:1]) attach(flux)
         G0 = new Profile(size);
+
+        int ngpus = 0;
+#ifdef _OPENACC
+        printf("\n\nOpenACC Enabled.\n" );
+        acc_device_t dev_type = acc_get_device_type();
+        ngpus = acc_get_num_devices( dev_type ); 
+#endif
+        printf("Max OpenMP core: %d    GPU: %d\n\n", omp_get_max_threads(), ngpus );
 
         dz = (z1 - z0) / nz;
         dv = (vz1 - vz0) / (nvz); //cell-center
@@ -105,11 +115,18 @@ public:
     {
         delete[] vz;
         delete[] Z;
+
+        #pragma acc exit data delete(v_stat, v_rhs, v_pre, v_cor)
+        delete v_stat, v_rhs, v_pre, v_cor;
+        //#pragma acc exit data delete(flux)
+        //delete flux;
+
         delete v_stat;
         delete v_rhs;
         delete v_pre;
         delete v_cor;
         delete flux;
+
         delete G0;
     }
 
@@ -126,9 +143,9 @@ public:
         mu = mu_;
     }
 
-    inline unsigned int idx(const int i, const int j)
+    inline unsigned long idx(const int v, const int j)
     {
-        return i * (nz + 2 * gz) + (j + gz);
+        return   (j+gz)*nvz + v;
     }
    
     inline int v_idx(double v){ 
@@ -180,11 +197,11 @@ public:
 
 
 
-void NuOsc::copy_state(const FieldVar *ivstate, FieldVar *cpvstate)
+void NuOsc::copy_state(const FieldVar *  __restrict ivstate, FieldVar *  __restrict cpvstate)
 {
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             cpvstate->ee[idx(i, j)]    = ivstate->ee[idx(i, j)];
             cpvstate->xx[idx(i, j)]    = ivstate->xx[idx(i, j)];
@@ -201,15 +218,15 @@ void NuOsc::copy_state(const FieldVar *ivstate, FieldVar *cpvstate)
 
 
 
-void NuOsc::updateBufferZone(FieldVar *in)
+void NuOsc::updateBufferZone(FieldVar * __restrict in)
 {
 
 #ifdef PERIODIC_BC
-#pragma omp parallel for
-#pragma acc parallel loop collapse(2) independent //  default(present)
-    for (int i = 0; i < nvz; i++)
+#pragma omp parallel for collapse(2)
+#pragma acc parallel loop collapse(2)
+    for (int j = 0; j < gz; j++)
     {
-        for (int j = 0; j < gz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             //lower side
             in->ee[idx(i, -j - 1)] = in->ee[idx(i, nz - j - 1)];
@@ -237,11 +254,11 @@ void NuOsc::updateBufferZone(FieldVar *in)
 #endif
 
 #ifdef OPEN_BC
-#pragma omp parallel for
-#pragma acc parallel loop collapse(2) indedependent // default(present)
-    for (int i = 0; i < nvz; i++)
+#pragma omp parallel for collapse(2)
+#pragma acc parallel loop collapse(2) indedependent
+    for (int j = 0; j < gz; j++)
     {
-        for (int j = 0; j < gz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             //lower side
             in->ee[idx(i, -j - 1)] = in->ee[idx(i, 0)];
@@ -270,12 +287,12 @@ void NuOsc::updateBufferZone(FieldVar *in)
 }
 
 /* v0 = v1 + a * v2 */
-void NuOsc::vectorize(FieldVar *v0, const FieldVar *v1, const real a, const FieldVar *v2)
+void NuOsc::vectorize(FieldVar * __restrict v0, const FieldVar *  __restrict v1, const real a, const FieldVar *  __restrict v2)
 {
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop collapse(2) independent //default(present)
-    for (int i = 0; i < nvz; i++)
-        for (int j = 0; j < nz; j++)
+#pragma acc parallel loop collapse(2) independent
+    for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             int k = idx(i, j);
             v0->ee[k] = v1->ee[k] + a * v2->ee[k];
@@ -290,12 +307,12 @@ void NuOsc::vectorize(FieldVar *v0, const FieldVar *v1, const real a, const Fiel
 }
 
 // v0 = v1 + a * ( v2 + v3 )
-void NuOsc::vectorize(FieldVar *v0, const FieldVar *v1, const real a, const FieldVar *v2, const FieldVar *v3)
+void NuOsc::vectorize(FieldVar *  __restrict v0, const FieldVar *  __restrict v1, const real a, const FieldVar *  __restrict v2, const FieldVar *  __restrict v3)
 {
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop collapse(2) independent //default(present)
-    for (int i = 0; i < nvz; i++)
-        for (int j = 0; j < nz; j++)
+#pragma acc parallel loop collapse(2) independent
+    for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             int k = idx(i, j);
             v0->ee[k] = v1->ee[k] + a * (v2->ee[k] + v3->ee[k]);

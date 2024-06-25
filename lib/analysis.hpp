@@ -26,9 +26,9 @@ void NuOsc::cal_pol(const FieldVar *inField, Pol *inP)
 {
     /* Calculate the polarization vector(\vec {P}) of nu and anu and correspondig |\vec{P}|*/
 
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             inP->P1[idx(i, j)] = 2.0 * inField->ex_re[idx(i, j)] / G0->G[idx(i, j)];
             inP->P2[idx(i, j)] = -2.0 * inField->ex_im[idx(i, j)] / G0->G[idx(i, j)];
@@ -51,9 +51,9 @@ void NuOsc::cal_Mn(M *inMn, const Pol *inP, unsigned int n)
         Subroutine to calculate the moments. L(vz[i], n) returns the legendre polynomial
         of order n (up to n=5) for the mode vz[i]
     */
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             inMn->e1 += L(vz[i], n) * (G0->G[idx(i, j)] * inP->P1[idx(i, j)] - G0->bG[idx(i, j)] * inP->bP1[idx(i, j)]) * dz * dv;
             inMn->e2 += L(vz[i], n) * (G0->G[idx(i, j)] * inP->P2[idx(i, j)] - G0->bG[idx(i, j)] * inP->bP2[idx(i, j)]) * dz * dv;
@@ -100,9 +100,9 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
         double avdP = 0.0;
         double avbdP = 0.0;
 
-        for (int i = 0; i < nvz; i++)
+        for (int j = 0; j < nz; j++)
         {
-            for (int j = 0; j < nz; j++)
+            for (int i = 0; i < nvz; i++)
             {
                 int ij = idx(i, j);
 
@@ -164,9 +164,9 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
     double dnom_Pee = 0;
     double dnom_Pbee = 0;
 
-    for (int i = 0; i < nvz; i++)
+    for (int j = 0; j < nz; j++)
     {
-        for (int j = 0; j < nz; j++)
+        for (int i = 0; i < nvz; i++)
         {
             num_Pee += ivstate->ee[idx(i, j)] * dz * dv;
             num_Pbee += ivstate->bee[idx(i, j)] * dz * dv;
