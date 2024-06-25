@@ -24,45 +24,42 @@ except ImportError:
 
 # --------------------------------------------------------------------------------------------------
 
-instructions = """ General instructions:
-    
-        [ INITIALIZE ]
-        ==============================================================
-        python manage.py [opt] [scheme]
-        [opt] : Initialize (= Configure + compile)  the jobs.
-            opt : 
-                --score, --mcore, --acc
-                --score : Single core job
-                --mcore : Multicore job
-                --acc   : GPU accelerated job
-            scheme:
-                fv : Simulation using finite volume method with 7th order WENO.
-                fd : Simulation using finite difference method with 3rd order Kreiss-Oliger dissipation.
-	
+# Job Compilation options specifier decalrations
+ACC_OPT = '--acc'
+PROFILE_OPT = '--prof'
+MULTI_CORE_OPT = '--mcore'
+SINGLE_CORE_OPT = '--score'
 
-        eg:
-            Run finite volume scheme     : $ python manage.py  --acc fv 
-            Run finite difference scheme : $ python manage.py  --acc fd
+#Job submission options
+LOC = "loc"
+CONDOR = "condor"
+SLURM = "slurm" 
 
+instructions = ("\n" + 
+    f"""                              HELP
+    Run :
+    -----
+    +---------------------------------------------------------------+
+    | $python manage.py  [compile_opt] [scheme] < --s [submit_opt]> |
+    +---------------------------------------------------------------+
+    Note: < ... > is optional
 
-        [ RUN ]
-        ==============================================================
+    [ compile_opt ] :
+    -----------------
+        {SINGLE_CORE_OPT} : Single core job
+        {MULTI_CORE_OPT} : Multicore job
+        {ACC_OPT}   : GPU accelerated job
 
-        To run the code after this, traverse to the job directory and run the 
-        executable by 
-    
-        $./main --id <ID> --conf job.config 
-
-        <ID> here can be anythin to tag the output. name of the job directory is preffered.
-
-                            OR
-
-        To restart a truncated job from stored data(in the .bin files), use
-
-        $./main --id <ID> --ff --conf job.config.
-
-        Here <ID> has to be the <ID> used in the truncated job.
-	"""
+    [submit_opt] :
+    --------------
+        {LOC}    : Local submission
+        {CONDOR} : Submit with condor
+        {SLURM}  : Submit with slurm 
+    eg:
+        Run FV scheme with gpu & submit with slurm : $ python manage.py  {ACC_OPT} fv --s {SLURM}
+        Run FD scheme with gpu & submit locally    : $ python manage.py  {ACC_OPT} fd --s {LOC}
+    """
+    )
 # --------------------------------------------------------------------------------------------------
 
 presets_filename = "presets.hpp"
@@ -78,6 +75,7 @@ SOURCE = "main.cpp"
 GCC = "g++"
 PCC = "pgc++"
 OPT = "-fast -O3"
+MCOREOPT = "-O3 -fopenmp"
 STD = "-std=c++0x"
 
 # --------------------------------------------------------------------------------------------------
@@ -88,11 +86,11 @@ file_exists_warning_prompt = ("[ WARNING ]...The existing directrories and will 
 # --------------------------------------------------------------------------------------------------
 
 proj_dir = os.getcwd()
-resources_dir = os.path.join(proj_dir, "lib")
+resources_dir = os.path.join(proj_dir, "src")
 presets_file = os.path.join(resources_dir, presets_filename)
 
 # Configuration file for the collection of jobs.
-batch_configs_file = os.path.join(resources_dir, "configs.yaml")
+batch_configs_file = os.path.join(proj_dir, "configs.yaml")
 
 #List of the jobs will be stored in this txt file.
 jobs_list_file = "jobs_list.txt"
@@ -100,8 +98,11 @@ jobs_list_file = "jobs_list.txt"
 # A job.config file will be added to each job folder
 job_config_file = ""
 
+config_file = "job.config"
+
 # For submitting with condor
-condor_conf = os.path.join(resources_dir, "condor.conf")
+condor_submission_file = "submit.jdl"
+
 
 # --------------------------------------------------------------------------------------------------
 
@@ -125,7 +126,7 @@ def export_job_configs(config_dict, path):
 def rm(path):
     if os.path.exists(path):
         stat = os.remove(path)
-        print(f'{path} removed.')
+        # print(f'{path} removed.')
     else:
         print(f"{path} does not exist.")
 
@@ -165,6 +166,8 @@ def configure(scheme="fv"):
 
         if config["vac_osc_on"] == True:
             presets.write("#define VAC_OSC_ON\n")
+        if config["mat_osc_on"]==True:
+            presets.write("#define MAT_OSC_ON\n")
         if config["collective_osc_on"] == True:
             presets.write("#define COLL_OSC_ON\n")
         if config["advection_off"] == True:
@@ -223,23 +226,20 @@ def configure(scheme="fv"):
                     'z1': z[1],
                     'nvz': nvz,
                     'CFL': CFL,
+                    'dz' : dz,
+                    'dt' : dt,
                     'gz': gz,
                     'v0': v0,
                     'v1': v1,
                     'nz': nz,
-                    'N_ITER': N_ITER,
-                    'ANAL_EVERY': ANAL_EVERY,
                     'pmo': config['pmo'],
                     'omega': config['omega'],
                     'theta': config['theta'],
                     'mu': config['mu'],
-                    'n_fullsnap' : config['n_fullsnap'],
-                    'n_vsnap'  : config['n_vsnap'],
-                    'vsnap_z'  : config['vsnap_z'],
-                    'n_zsnap'  : config['n_zsnap'],
-                    'zsnap_v'  : config['zsnap_v'],
+                    'perturbation_size' : config['perturbation_size'],
+                    'N_ITER': N_ITER,
+                    'ANAL_EVERY': ANAL_EVERY,
                     'n_dump_rho' : config['n_dump_rho'],
-                    'dump_rho_v_modes' : config['dump_rho_v_modes'],
                 }
 
                 # ID for the job
@@ -249,7 +249,6 @@ def configure(scheme="fv"):
                 model_dir = os.path.join(scheme_dir, config_id)
 
                 # Config file for the job "ID"
-                config_file = f"job.config"
 
                 config_list.append({"id": config_id, "file": config_file})
 
@@ -268,10 +267,14 @@ def configure(scheme="fv"):
     os.chdir(proj_dir)
 
     return "success", scheme_dir
-# --------------------------------------------------------------------------------------------------
-
+# ---------------------------------------------------------------------------------------------------
 def compi(comp_opt = "--acc"):
     """To compile the code"""
+
+    with open(batch_configs_file, "r") as con:
+        configs = yaml.load(con, Loader=yaml.FullLoader)
+    modules = configs["modules"]
+
     pwd = os.getcwd()
     os.chdir(resources_dir)
     exe_path = os.path.join(os.getcwd(), TARGET)
@@ -286,16 +289,27 @@ def compi(comp_opt = "--acc"):
             print(f"{TARGET} generated for singlecore job")
         else:
             return None, None
-
     elif comp_opt == "--mcore":
-        comp_stat = os.system(f"make")
-        # comp_stat = os.system(f"{PCC} {OPT} -ta=multicore -Minfo=accel -o {TARGET} {SOURCE}")
+        comp_stat = os.system(f"{GCC} {STD} {MCOREOPT} -o {TARGET} {SOURCE}")
         if comp_stat == 0:
-            print(f"{TARGET} generated for multicore job")
+            print(f"{TARGET} generated for muti-core job")
         else:
             return None, None
     elif comp_opt == "--acc":
-        comp_stat = os.system(f"{PCC} {OPT} -acc -Minfo=accel -ta=tesla:managed -o {TARGET} {SOURCE}")
+        #print('dsdfsfsdf')
+        with open ("compile.sh", "w") as f:
+            f.write("#!/bin/bash" + "\n")
+            f.write("module purge" + "\n")
+            for module in modules:
+                f.write(f"module load {module} \n")
+            f.write("make" + "\n")
+        os.system("chmod +x compile.sh")
+        with open ("Makefile", "w") as f:
+            f.write("#!/bin/bash" + "\n")
+            f.write("all:" + "\n")
+            f.write("\t" + f"{PCC} {OPT} -acc -Minfo=accel -ta=tesla:managed -o {TARGET} {SOURCE}" + "\n")
+
+        comp_stat = os.system(f"./compile.sh")
 
         if comp_stat == 0:
             print(f"{TARGET} generated for accelerated job")
@@ -325,26 +339,89 @@ def cp_exe(scheme_dir_path, exe_path):
                 shutil.copy(exe_path, dst)
             else:
                 shutil.copy(exe_path, dst)
+            print (f"copied {exe_path} to {dst}")
                 
     return "success", jobs_list
     
 # --------------------------------------------------------------------------------------------------
 
-def run(jobs_list, scheme_dir_path):
+def run(jobs_list, scheme_dir_path, submit_mod):
     pwd = os.getcwd()
     for job in jobs_list:
         os.chdir(os.path.join(scheme_dir_path, job))
-        os.system(f"./{TARGET} --id {job} --conf job.config")
+        if submit_mod == "loc":
+            os.system(f"./{TARGET} --id {job} --conf {config_file}")
+
+        elif submit_mod == "condor":
+
+            print (f"Submitting {job} with {submit_mod}")
+
+            with open (os.path.join(pwd, batch_configs_file), 'r') as f:
+
+                configs = yaml.load(f, Loader=yaml.FullLoader)
+
+            jdl_configs = configs["condor_requests"]
+
+            with open (condor_submission_file, 'w') as f:
+                
+                f.write ("universe = vanilla" + "\n")
+                f.write (f"ID = {job}" + "\n")
+                f.write (f"request_cpus = {jdl_configs['ncpu']}" + "\n")
+                f.write (f"request_memory = {jdl_configs['ram']}" + "\n")
+                f.write (f"request_disk = {jdl_configs['storage']}" + "\n")
+                f.write ("error = $(ID).err" + "\n")
+                f.write ("output = $(ID).out" + "\n")
+                f.write ("log = $(ID).log" + "\n")
+                f.write (f"executable = {TARGET}" + "\n")
+                f.write (f"arguments = --id {job} --conf {config_file}" + "\n")
+                f.write ("should_transfer_files = yes" + "\n")
+                f.write (f"transfer_input_files = {config_file}" + "\n")
+                f.write ("queue 1")
+
+            os.system(f"condor_submit {condor_submission_file}")
+
+        elif submit_mod == "slurm":
+
+            print (f"Submitting {job} with {submit_mod}")
+
+            with open (os.path.join(pwd, batch_configs_file), 'r') as f:
+                configs = yaml.load(f, Loader=yaml.FullLoader)
+            
+            slurm_requests = configs["slurm_requests"]
+            
+
+
+
+            with open("sjob.submit", "w") as f:
+                f.write("#!/bin/bash" + "\n")
+                
+                f.write(f"#SBATCH --job-name={job}" + "\n")
+                if slurm_requests["GPU"]["enable"]:
+                    f.write(f"#SBATCH --partition={slurm_requests['GPU']['partition']}" + "\n")
+                    f.write(f"#SBATCH --gres=gpu:{slurm_requests['GPU']['ngres']}" + "\n")
+                
+                if slurm_requests["CPU"]["enable"]:
+                    f.write(f"#SBATCH --cpus-per-task={slurm_requests['CPU']['cpus-per-task']}" + "\n")
+                    #f.write(f"module {slurm_requests['CPU']['purge']}" + "\n")
+                    f.write(f"#SBATCH --partition={slurm_requests['CPU']['partition']}" + "\n")
+                for module in configs['modules']:
+                    f.write(f"module load {module}" + "\n")
+
+                f.write(f"srun ./{TARGET} --id {job} --conf {config_file}" + "\n")
+        
+            os.system("sbatch sjob.submit")
         os.chdir(pwd)
+        
     return "success"
 
 # --------------------------------------------------------------------------------------------------
 
-def main(mode, scheme):
+def main(mode, scheme, submit_mod = "loc", do_submit = False):
     conf_stat = "failed"  # Configuration status
     compi_stat = "failed" # Compilation status
     cp_stat = "failed"    # Copy status
     run_stat = "failed"   # Run status
+
 
     """Configure"""
     conf_stat, scheme_dir_path = configure(scheme)
@@ -362,18 +439,25 @@ def main(mode, scheme):
         print("Compilation failed")
         return
     
-##Uncomment this section to run the jobs automatically.
-#     if cp_stat == "success":
-#         """Run jobs"""
-#         run_stat = run(jobs_list, scheme_dir_path)
-#     else:
-#         print(f"Copying executable failed.")
-#         return
+#Uncomment this section to run the jobs automatically.
+    if (cp_stat == "success"):
+        if do_submit:
+            """Run jobs"""
+            run_stat = run(jobs_list, scheme_dir_path, submit_mod)
+        else:
+            print ("Did not ask to submit the job.")
+            return 
+    else:
+        if (not do_submit):
+            print(f"Copying executable failed.")
+        else:
+            print ("You chose not to submit the job.")
+        return
         
-#     if run_stat == "success":
-#         print("SUCCESS")
-#     else:
-#         print("FAILED")
+    if run_stat == "success":
+        print("SUCCESS")
+    else:
+        print("FAILED")
 
 # --------------------------------------------------------------------------------------------------
 
@@ -384,26 +468,41 @@ if __name__ == "__main__":
     mode = None
     is_scheme = False
     is_mode = False
+    submit_mod = "loc"
+    do_submit = False
     
     if len(sys.argv) > 1:
         for i in range(1, len(sys.argv)):
+
             if sys.argv[i] == "--help":
                 print(instructions)
-            elif sys.argv[i] == "--score" or sys.argv[i] == "--mcore" or sys.argv[i] == "--acc":
+                exit(0)
+
+            elif (sys.argv[i] == SINGLE_CORE_OPT) or (sys.argv[i] == MULTI_CORE_OPT) or (sys.argv[i] == ACC_OPT):
                 mode  = sys.argv[i]                
                 i += 1
                 is_mode = True
+                print (f"compilation mode set to {mode}")
+
             elif sys.argv[i] == 'fv' or sys.argv[i] == 'fd':
                 scheme = sys.argv[i]
                 i += 1
-                is_scheme = False
-            else:
-                print(f"Unrecognized option {sys.argv[i]}")
-                print(instructions)
-                sys.exit()
+                is_scheme = True
+                print(f"Simulation scheme is set to {scheme}")
+
+            elif sys.argv[i] == "--s":
+                submit_mod = sys.argv[i+1]
+                do_submit = True
+                print(f"Submission option set to {submit_mod}")
+            
+
+    if not (is_mode and is_scheme):
+        print ("You have not specified either the simulation [scheme] or compilation [opt]")
+        print("Run manage.py --help for instructions.")
+        sys.exit()
 
     if (not is_scheme and not is_mode):
         print(instructions)
     else:
-        main(mode, scheme)
+        main(mode, scheme, submit_mod = submit_mod, do_submit= do_submit)
         os.chdir(PWD)

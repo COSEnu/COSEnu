@@ -1,0 +1,75 @@
+# CONFIGURATIONS FOR THE SIMULATION.
+#----------------------------------------------------------------#
+
+# Spatial domain specifics.
+zrange: [-600, 600]
+nzs: [1200]
+CFLS: [0.4]
+
+#----------------------------------------------------------------#
+
+# Phase-space specifics.
+v0: -1.0
+v1: 1.0
+nvzs: [32]
+
+#----------------------------------------------------------------#
+
+boundary: periodic # Options ->  periodic, open
+
+#----------------------------------------------------------------#
+
+end_time: 1200 # Physical end time
+
+#----------------------------------------------------------------#
+
+perturbation_size: 1e-2
+
+#----------------------------------------------------------------#
+
+# Switch on/off advection.
+advection_off: False # Options -> True, False
+
+# Switch on/off vacuum oscillation
+vac_osc_on: False # options -> True, False
+pmo: 1.0 # 1.0 -> normal mass ordering, -1.0 -> inverted mass ordering, 0.0 -> no vacuum term.
+omega: 1.0 # \Dedlta m^2/2E.
+theta: 37 # Vacuum mixing angle in degrees.
+
+mat_osc_on: False
+
+# Switch on/off collective oscillations
+collective_osc_on: True # Options -> True, False
+mu: 1.0 # \sqrt{2} G_F n_{\nu_e}
+#----------------------------------------------------------------#
+# ANALYSIS
+#----------------------------------------------------------------#
+
+# To analyze the behaviour of the conserved quantities.
+n_analyze: 100 # Total number of analysis to be carried out per job.
+
+# To capture the the field variables for all the velocities over entire domain.
+n_dump_rho: 100 # number of times density matrix elements has to be dumped.
+
+#----------------------------------------------------------------#
+
+# Folder names
+folder_fv: "lin_a_m1em3"
+folder_fd: "output_from_fd"
+
+#----------------------------------------------------------------#
+
+condor_requests:
+  ncpu: 32
+  ram: 10G
+  storage: 20G
+
+slurm_requests: #slurm job description
+  GPU:
+    enable: False
+    partition: a100
+    ngres: 1
+
+  cpus-per-task: 20
+
+modules: ["nvhpc/24.3"]
