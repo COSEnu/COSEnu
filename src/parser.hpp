@@ -66,20 +66,11 @@ public:
     double theta = 0.0;
     double mu = 1.0;
 
+    double perturbation_size = 0.0;
+
     //Analysis related
-    int n_fullsnap = 0;
-    int fullsnap_interval = 0;
-
-    int n_vsnap = 0;
-    std::vector<double> vsnap_z;
-    int v_snap_interval;
-
-    int n_zsnap = 0;
-    std::vector<double> zsnap_v;
-    int z_snap_interval;
 
     int n_dump = 0;
-    std::vector<double>v_dumps;
     int dump_interval = 0;
 
 
@@ -176,6 +167,11 @@ Params::Params(std::string CONFIG_FILE)
                 string_to_type(value, v1);
                 is_v1 = true;
             }
+
+            else if (key == "perturbation_size")
+            {
+                string_to_type(value, perturbation_size);
+            }
             else if (key == "N_ITER")
             {
                 string_to_type(value, N_ITER);
@@ -206,35 +202,10 @@ Params::Params(std::string CONFIG_FILE)
                 string_to_type(value, mu);
                 is_mu = true;
             }
-            else if (key == "n_fullsnap")
-            {
-                string_to_type(value, n_fullsnap);
-            }
-            else if (key == "n_vsnap")
-            {
-                string_to_type(value, n_vsnap);
-            }
-            else if (key == "vsnap_z")
-            {
-                cssl_to_vec(value, vsnap_z);
-            }
-            else if (key == "n_zsnap")
-            {
-                string_to_type(value, n_zsnap);
-            }
-            else if (key == "zsnap_v")
-            {
-                cssl_to_vec(value, zsnap_v);
-            }
             else if (key == "n_dump_rho")
             {
                 string_to_type(value, n_dump);
             }
-            else if (key == "dump_rho_v_modes")
-            {
-                cssl_to_vec(value, v_dumps);
-            }
-
             else
             {
                 std::cout << "Redundant or unknown key: " << key << std::endl;
@@ -251,36 +222,6 @@ Params::Params(std::string CONFIG_FILE)
                   << "Exiting." << std::endl;
         exit(0);
     }
-    // Snapshot intervals
-    // z-snapshot for given vmodes
-    if (n_zsnap > 0)
-	{
-	    z_snap_interval = (int)(N_ITER / n_zsnap);
-	}
-	else
-	{
-		z_snap_interval = N_ITER+1;
-	}
-
-    // v-snapshots at given locations
-    if (n_vsnap > 0)
-	{
-		v_snap_interval = (int)(N_ITER / n_vsnap);
-	}
-	else
-	{
-		v_snap_interval = N_ITER+1;
-	}
-
-    // Full snapshots
-    if ( n_fullsnap > 0)
-	{
-	    fullsnap_interval = (int)(N_ITER / n_vsnap);
-	}
-	else
-	{
-		fullsnap_interval = N_ITER+1;
-	}
 
 #ifdef VAC_OSC_ON
     if (!(is_pmo && is_omega && is_theta))
@@ -297,13 +238,17 @@ Params::Params(std::string CONFIG_FILE)
                   << "Exiting." << std::endl;
         exit(0);
     }
-    if (n_dump > 0)
+#endif
+if (n_dump > 0)
     {   
         dump_interval = (int)(N_ITER/n_dump);
+        if (dump_interval < 1)
+        {
+            dump_interval = 1;
+        }
     }   
     else
     {   
         dump_interval = N_ITER + 1;
     } 
-#endif
 }

@@ -15,28 +15,25 @@ void NuOsc::initialize()
         << "Will not be storing initial angular profiles.\n";
     }
 
-
-    for (int j = 0; j < nz; j++)
+    for (int i = 0; i < nvz; i++)
     {
-        for (int i = 0; i < nvz; i++)
+        for (int j = 0; j < nz; j++)
         {
             G0->G[idx(i, j)] = g(vz[i], 1.0, signu);
             G0->bG[idx(i, j)] = alpha * g(vz[i], 1.0, sigbnu);
             
-            v_stat->ee[idx(i, j)]    = 0.5 * G0->G[idx(i, j)] * (1.0 + eps_(Z[j], 0.0)); 
-            v_stat->xx[idx(i, j)]    = 0.5 * G0->G[idx(i, j)] * (1.0 - eps_(Z[j], 0.0));
-            v_stat->ex_re[idx(i, j)] = 0.5 * G0->G[idx(i, j)] * (0.0 + eps(Z[j], 0.0));
+            v_stat->ee[idx(i, j)]    = 0.5 * G0->G[idx(i, j)] * (1.0 + eps_(Z[j], 0.0, perturbation_size)); 
+            v_stat->xx[idx(i, j)]    = 0.5 * G0->G[idx(i, j)] * (1.0 - eps_(Z[j], 0.0, perturbation_size));
+            v_stat->ex_re[idx(i, j)] = 0.5 * G0->G[idx(i, j)] * (0.0 + eps(Z[j], 0.0, perturbation_size));
             v_stat->ex_im[idx(i, j)] = -0.0;
 
-            v_stat->bee[idx(i, j)]    = 0.5 * G0->bG[idx(i, j)] * (1.0 + eps_(Z[j], 0.0)); 
-            v_stat->bxx[idx(i, j)]    = 0.5 * G0->bG[idx(i, j)] * (1.0 - eps_(Z[j], 0.0));
-            v_stat->bex_re[idx(i, j)] = 0.5 * G0->bG[idx(i, j)] * (0.0 + eps(Z[j], 0.0));
+            v_stat->bee[idx(i, j)]    = 0.5 * G0->bG[idx(i, j)] * (1.0 + eps_(Z[j], 0.0, perturbation_size)); 
+            v_stat->bxx[idx(i, j)]    = 0.5 * G0->bG[idx(i, j)] * (1.0 - eps_(Z[j], 0.0, perturbation_size));
+            v_stat->bex_re[idx(i, j)] = 0.5 * G0->bG[idx(i, j)] * (0.0 + eps(Z[j], 0.0, perturbation_size));
             v_stat->bex_im[idx(i, j)] = 0.0;
 
-            #if !defined(BENCHMARK)
             g_file.write((char *)&G0->G [idx(i, j)], sizeof(double)); 
             g_file.write((char *)&G0->bG[idx(i, j)], sizeof(double));
-            #endif 
         }
     }
     updateBufferZone(v_stat);

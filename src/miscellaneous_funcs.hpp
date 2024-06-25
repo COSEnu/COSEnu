@@ -61,16 +61,16 @@ double g(double v, double v0, double sigma)
 
 /*---------------------------------------------------------------------------*/
 
-inline double eps(double z, double z0)
+inline double eps(double z, double z0, double amp)
 {
-    return 1e-1 * exp(-(z - z0) * (z - z0) / 50.0);
+    return amp * exp(-(z - z0) * (z - z0) / 50.0);
 }
 
 /*---------------------------------------------------------------------------*/
 
-inline double eps_(double z, double z0)
+inline double eps_(double z, double z0, double amp)
 {
-    double e = eps(z, z0);
+    double e = eps(z, z0, amp);
     return sqrt(1.0 - e * e);
 }
 
