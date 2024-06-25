@@ -115,10 +115,18 @@ public:
     {
         delete[] vz;
         delete[] Z;
+
         #pragma acc exit data delete(v_stat, v_rhs, v_pre, v_cor)
         delete v_stat, v_rhs, v_pre, v_cor;
         //#pragma acc exit data delete(flux)
         //delete flux;
+
+        delete v_stat;
+        delete v_rhs;
+        delete v_pre;
+        delete v_cor;
+        delete flux;
+
         delete G0;
     }
 
