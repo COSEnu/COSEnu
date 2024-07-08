@@ -41,28 +41,25 @@ public:
 
     real perturbation_size;
 
-    std::string ID;
     std::string SCHEME;
     std::ofstream outf;
 
-    NuOsc(real z0_, real z1_, int nz_, int nvz_, real CFL_, int gz_,
-          std::string ID_, std::string SCHEME_, double perturbation_size_) : phy_time(0.)
+    NuOsc(struct Params pars) : phy_time(0.)
     {
-        ID = ID_;
-        SCHEME = SCHEME_;
-        vz0 = -1.0;
-        vz1 = 1.0;
-        z0 = z0_;
-        z1 = z1_;
+        SCHEME = pars.SCHEME;
+        vz0 = pars.v0;
+        vz1 = pars.v1;
+        z0 = pars.z0;
+        z1 = pars.z1;
 
-        nz = nz_;
-        nvz = nvz_;
-        CFL = CFL_;
-        gz = gz_; // Width of z-buffer zone. 4 for 2nd-order of d/dz.
+        nz = pars.nz;
+        nvz = pars.nvz;
+        CFL = pars.CFL;
+        gz = pars.gz; // Width of z-buffer zone. 4 for 2nd-order of d/dz.
 
         ko = 1.0e-1;
 
-        perturbation_size = perturbation_size_;
+        perturbation_size = pars.perturbation_size;
 
         size = (nz + 2 * gz) * (nvz);
         Z = new double[nz];

@@ -13,10 +13,10 @@ void NuOsc::initialize()
     double sigbnu = 0.5;
     double alpha = 0.9;
 
-    std::ofstream g_file(ID + "_G0.bin",std::ofstream::out | std::ofstream::binary);
+    std::ofstream g_file("G0.bin",std::ofstream::out | std::ofstream::binary);
     if(!g_file)
     {
-        std::cout << "Unable to open " << ID+"_G0.bin" << " file from NuOsc::initialise." 
+        std::cout << "Unable to open " << "G0.bin" << " file from NuOsc::initialise." 
         << "Will not be storing initial angular profiles.\n";
     }
 
