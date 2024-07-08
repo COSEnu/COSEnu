@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
 	// ......................... VARIABLES ......................... //
 
 	std::string SCHEME = "";
-	std::string ID = "";
 	std::string CONFIG_FILE = "";
 
 	unsigned int N_ITER;
@@ -74,14 +73,7 @@ int main(int argc, char *argv[])
 
 	for (int i = 1; argv[i] != 0; i++)
 	{
-		if (strcmp(argv[i], "--id") == 0)
-		{
-			ID = argv[i + 1];
-			is_id = true;
-			i += 1;
-		}
-
-		else if (strcmp(argv[i], "--conf") == 0)
+		if (strcmp(argv[i], "--conf") == 0)
 		{
 			CONFIG_FILE = argv[i + 1];
 			is_conf = true;
@@ -93,7 +85,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (!(is_id && is_conf))
+	if (!(is_conf))
 	{
 		std::cout << "[ FAIL ]..."
 				  << "Both job ID (to label the output files) and configuration should be passed "
@@ -121,7 +113,8 @@ int main(int argc, char *argv[])
 
 	// ......................... CREATING STATE ......................... //
 
-	NuOsc state(pars.z0, pars.z1, pars.nz, pars.nvz, pars.CFL, pars.gz, ID, pars.SCHEME, pars.perturbation_size);
+	// NuOsc state(pars.z0, pars.z1, pars.nz, pars.nvz, pars.CFL, pars.gz, ID, pars.SCHEME, pars.perturbation_size);
+	NuOsc state(pars);
 	N_ITER = pars.N_ITER;
 	std::cout << std::setw(30) << "NUMBER OFITERATIONS: " << N_ITER << std::endl;
 
@@ -233,10 +226,10 @@ int main(int argc, char *argv[])
 			  << std::endl;
 
 	std::ofstream xtf;
-	xtf.open(ID + "time.txt", std::ofstream::out | std::ofstream::trunc);
+	xtf.open("time.txt", std::ofstream::out | std::ofstream::trunc);
 	auto end = std::chrono::steady_clock::now();
 	std::chrono::duration<double> elapsed_seconds = end - start;
-	xtf << ID << "\t" << elapsed_seconds.count() << std::endl;
+	xtf << elapsed_seconds.count() << std::endl;
 	xtf.close();
 	std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 

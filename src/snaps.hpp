@@ -5,8 +5,8 @@
 
 void NuOsc::write_state(unsigned int t)
 {
-    std::string file_name = ID + "_state.bin";
-    std::string file_name_temp = ID + "_state" + std::to_string(t) + ".bin";
+    std::string file_name = "state.bin";
+    std::string file_name_temp = "state" + std::to_string(t) + ".bin";
     std::ofstream fpw(file_name_temp, std::ios::out | std::ios::binary);
     long int buffer_size = sizeof(double);
 
@@ -42,7 +42,7 @@ void NuOsc::write_state(unsigned int t)
 
 void NuOsc::write_state0(const FieldVar *stat0)
 {
-    std::string file_name = ID + "_state0.bin";
+    std::string file_name = "state0.bin";
     std::ofstream fpw(file_name, std::ios::out | std::ios::binary);
     long int buffer_size = sizeof(double);
 
@@ -74,12 +74,12 @@ void NuOsc::write_state0(const FieldVar *stat0)
 
 int NuOsc::read_state()
 {
-    std::string file_name = ID + "_state.bin";
+    std::string file_name = "state.bin";
     bool is_loading_0 = false;
     if (!file_exists(file_name))
     {
         std::cout << "Unable to find " << file_name << "\n";
-        file_name = ID + "_state0.bin";
+        file_name = "state0.bin";
         is_loading_0 = true;
         std::cout << "Loading from " << file_name << ". \n";
     }
@@ -127,7 +127,7 @@ int NuOsc::read_state()
 
 void NuOsc::read_state0(FieldVar *stat0)
 {
-    std::string file_name = ID + "_state0.bin";
+    std::string file_name = "state0.bin";
     std::ifstream fpr(file_name, std::ios::in | std::ios::binary);
     if (!fpr)
     {
@@ -160,7 +160,7 @@ void NuOsc::read_state0(FieldVar *stat0)
 
 void NuOsc::read_G0()
 {
-    std::string file_name = ID + "_G0.bin";
+    std::string file_name = "G0.bin";
     std::ifstream g_state_in(file_name, std::ios::in | std::ios::binary);
     if (!g_state_in)
     {
@@ -186,7 +186,7 @@ void NuOsc::read_G0()
 
 void NuOsc::dump_rho(const FieldVar *ivstate, const uint t_)
 {
-    std::string rdump_filename = ID + "_rho_" + std::to_string(t_) + ".dat";
+    std::string rdump_filename = "rho_" + std::to_string(t_) + ".dat";
     std::ofstream rsnap_ofstream;
     rsnap_ofstream.open(rdump_filename, std::ofstream::out | std::ofstream::trunc);
 

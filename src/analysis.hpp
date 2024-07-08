@@ -75,7 +75,7 @@ void NuOsc::dcon(const Pol *P, const Pol *P0, M *M_0, int t)
         file.
     */
     std::ofstream con_qty_ofstream; // To store deviation of conserved qtys.
-    std::string con_qty_fname = ID + "_conserved_quantities.dat";
+    std::string con_qty_fname = "conserved_quantities.dat";
     if (t == 0)
     {
         con_qty_ofstream.open(con_qty_fname, std::ofstream::out | std::ofstream::trunc);
@@ -138,7 +138,7 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
     */
 
     std::ofstream surv_prob_ofstream;
-    std::string surv_prob_fname = ID + "_survival_probability.dat";
+    std::string surv_prob_fname = "survival_probability.dat";
     if (t == 0)
     {
         surv_prob_ofstream.open(surv_prob_fname, std::ofstream::out | std::ofstream::trunc);
