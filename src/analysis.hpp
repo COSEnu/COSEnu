@@ -1,3 +1,5 @@
+#if not defined(__ANALYSIS__)
+#define __ANALYSIS__
 void NuOsc::analyse(const FieldVar *ivstate, const Pol *P0, uint n, uint t)
 {
     /****************************************************************************************/
@@ -181,5 +183,9 @@ void NuOsc::surv_prob(const FieldVar *ivstate, const FieldVar *ivstate0, uint t)
 
     surv_prob_ofstream.close();
 }
+
+/*---------------------------------------------------------------------------*/
+
+#endif // __ANALYSIS__
 
 /*------------------------------- EOF ------------------------------------*/

@@ -24,42 +24,27 @@ except ImportError:
 
 # --------------------------------------------------------------------------------------------------
 
+GCC = "g++"
+PCC = "pgc++"
+OPT = "-fast -O3"
+MCOREOPT = "-O3 -fopenmp"
+STD = "-std=c++0x"
+
+# --------------------------------------------------------------------------------------------------
+
 # Job Compilation options specifier decalrations
 ACC_OPT = '--acc'
 PROFILE_OPT = '--prof'
 MULTI_CORE_OPT = '--mcore'
 SINGLE_CORE_OPT = '--score'
 
+# --------------------------------------------------------------------------------------------------
+
 #Job submission options
 LOC = "loc"
 CONDOR = "condor"
 SLURM = "slurm" 
 
-instructions = ("\n" + 
-    f"""                              HELP
-    Run :
-    -----
-    +---------------------------------------------------------------+
-    | $python manage.py  [compile_opt] [scheme] < --s [submit_opt]> |
-    +---------------------------------------------------------------+
-    Note: < ... > is optional
-
-    [ compile_opt ] :
-    -----------------
-        {SINGLE_CORE_OPT} : Single core job
-        {MULTI_CORE_OPT} : Multicore job
-        {ACC_OPT}   : GPU accelerated job
-
-    [submit_opt] :
-    --------------
-        {LOC}    : Local submission
-        {CONDOR} : Submit with condor
-        {SLURM}  : Submit with slurm 
-    eg:
-        Run FV scheme with gpu & submit with slurm : $ python manage.py  {ACC_OPT} fv --s {SLURM}
-        Run FD scheme with gpu & submit locally    : $ python manage.py  {ACC_OPT} fd --s {LOC}
-    """
-    )
 # --------------------------------------------------------------------------------------------------
 
 presets_filename = "presets.hpp"
@@ -72,17 +57,39 @@ SOURCE = "main.cpp"
 
 # --------------------------------------------------------------------------------------------------
 
-GCC = "g++"
-PCC = "pgc++"
-OPT = "-fast -O3"
-MCOREOPT = "-O3 -fopenmp"
-STD = "-std=c++0x"
-
-# --------------------------------------------------------------------------------------------------
 
 file_exists_warning_prompt = ("[ WARNING ]...The existing directrories and will be removed. " + 
                             "Do you want to continue? (y/n): "
                               )
+# --------------------------------------------------------------------------------------------------
+
+instructions = ("\n" + 
+    f"""                              HELP
+    Run :
+    -----
+    +---------------------------------------------------------------+
+    | $python manage.py  [compile_opt] [scheme] (--s [submit_opt])  |
+    +---------------------------------------------------------------+
+    Note: ( ... ) is optional
+
+    [ compile_opt ] :
+    -----------------
+        {SINGLE_CORE_OPT.ljust(10)}: Single core job (assumes {GCC} is installed).
+        {MULTI_CORE_OPT.ljust(10)}: Multicore job (assume {GCC} and OpenMP are installed).
+        {ACC_OPT.ljust(10)}: GPU accelerated job (by default assumes {PCC} compiler is installed. 
+        {' '*11} Else, edit the PCC variable in the manage.py to point to the correct compiler with 
+        {' '*11} OpenACC support).
+
+    [submit_opt] :
+    --------------
+        {LOC}    : Local submission
+        {CONDOR} : Submit with condor
+        {SLURM}  : Submit with slurm 
+    eg:
+        Run FV scheme with gpu & submit with slurm : $ python manage.py  {ACC_OPT} fv --s {SLURM}
+        Run FD scheme with gpu & submit locally    : $ python manage.py  {ACC_OPT} fd --s {LOC}
+    """
+    )
 # --------------------------------------------------------------------------------------------------
 
 proj_dir = os.getcwd()
@@ -151,6 +158,8 @@ def configure(scheme="fv"):
     boundary = config['boundary']
 
     with open(presets_file, "w") as presets:
+        presets.write("#if not defined(__PRESETS__)\n")
+        presets.write("#define __PRESETS__\n\n")
         if boundary == 'open':
             presets.write("#define OPEN_BC\n")
         else:
@@ -173,6 +182,8 @@ def configure(scheme="fv"):
         if config["advection_off"] == True:
             presets.write("#define ADVEC_OFF\n")
         presets.write("\n")
+
+        presets.write("#endif // __PRESETS__\n")
         
     # Creating necessary folders and copying files
     config_list = []
