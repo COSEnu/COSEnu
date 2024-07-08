@@ -1,3 +1,8 @@
+#if not defined(__RHS_FD__)
+#define __RHS_FD__
+
+/*---------------------------------------------------------------------------*/
+
 void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
 {
 #pragma omp parallel for collapse(2)
@@ -142,3 +147,8 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
         }
 }
 
+/*---------------------------------------------------------------------------*/
+
+#endif // __RHS_FD__
+
+/*---------------------------------------------------------------------------*/

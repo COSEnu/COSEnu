@@ -1,3 +1,5 @@
+#if not defined(__MISCELLANEOUS_FUNCS__)
+#define __MISCELLANEOUS_FUNCS__
 /*---------------------------------------------------------------------------*/
 
 bool file_exists(std::string path)
@@ -121,5 +123,9 @@ double L(double x, unsigned int order)
     }
     return (value);
 }
+
+/*---------------------------------------------------------------------------*/
+
+#endif // __MISCELLANEOUS_FUNCS__
 
 /*---------------------------------------------------------------------------*/

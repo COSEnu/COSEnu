@@ -1,3 +1,8 @@
+#if not defined(__INITIALIZE__)
+#define __INITIALIZE__
+
+/*---------------------------------------------------------------------------*/
+
 void NuOsc::initialize()
 {
 /*
@@ -40,3 +45,10 @@ void NuOsc::initialize()
     std::cout << "Simulation state initialized." << std::endl;
     g_file.close();
 }
+
+/*---------------------------------------------------------------------------*/
+
+#endif // __INITIALIZE__
+
+/*---------------------------------------------------------------------------*/
+
