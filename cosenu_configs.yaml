@@ -1,4 +1,5 @@
 # CONFIGURATIONS FOR THE SIMULATION.
+# Interpreted as a yaml file. Please use yaml syntax.
 #----------------------------------------------------------------#
 
 # Spatial domain specifics.

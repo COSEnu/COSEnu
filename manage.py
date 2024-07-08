@@ -97,7 +97,7 @@ resources_dir = os.path.join(proj_dir, "src")
 presets_file = os.path.join(resources_dir, presets_filename)
 
 # Configuration file for the collection of jobs.
-batch_configs_file = os.path.join(proj_dir, "configs.yaml")
+batch_configs_file = os.path.join(proj_dir, "cosenu_configs.yaml")
 
 #List of the jobs will be stored in this txt file.
 jobs_list_file = "jobs_list.txt"
@@ -203,6 +203,8 @@ def configure(scheme="fv"):
                 sys.exit()
             elif continue_if_exist == "Y":
                 print(f"[ OK ]...Setting up the projects for {scheme}.")
+                shutil.rmtree(scheme_dir)
+                os.mkdir(scheme_dir)
                 flag = False
             else:
                 print(f"[ FAIL ]...Invalid input {continue_if_exist}\n Re-enter.")
