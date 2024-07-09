@@ -88,9 +88,9 @@ int main(int argc, char *argv[])
 	if (!(is_conf))
 	{
 		std::cout << "[ FAIL ]..."
-				  << "Both job ID (to label the output files) and configuration should be passed "
+				  << "The configuration should be passed "
 				  << "on runtime." << std::endl
-				  << "Use --id and --conf to specify them." << std::endl
+				  << "Use --conf to specify them." << std::endl
 				  << "General format:\n"
 				  << "\t"
 				  << "$./main --conf <Configuration file name>\n\n"
