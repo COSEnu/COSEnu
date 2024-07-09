@@ -88,17 +88,16 @@ int main(int argc, char *argv[])
 	if (!(is_conf))
 	{
 		std::cout << "[ FAIL ]..."
-				  << "Both job ID (to label the output files) and configuration should be passed "
+				  << "The configuration should be passed "
 				  << "on runtime." << std::endl
-				  << "Use --id and --conf to specify them." << std::endl
+				  << "Use --conf to specify them." << std::endl
 				  << "General format:\n"
 				  << "\t"
-				  << "$./main --id <ID> --conf <Configuration file name>\n\n"
+				  << "$./main --conf <Configuration file name>\n\n"
 				  << "If loading field variables from .bin file:\n"
 				  << "\t"
-				  << "$./main --id <ID> --conf <Configuration file name> --ff\n"
-				  << "The --ff flag will look for binary files named ID_state.bin and ID_G0.bin in the same folder.\n"
-				  << "eg:(inside condor submit file)" << std::endl
+				  << "$./main --conf <Configuration file name> --ff\n"
+				  << "The --ff flag will look for binary files named state.bin and G0.bin in the same folder.\n"
 				  << "exiting for now." << std::endl;
 		exit(0);
 	}
