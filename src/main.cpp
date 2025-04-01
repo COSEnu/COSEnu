@@ -153,8 +153,6 @@ int main(int argc, char *argv[])
 
 	//......................... EVALUATING INITIAL STATE .........................//
 
-#ifdef COLL_OSC_ON
-
 	Pol *P0 = new Pol(state.size);
 	state.cal_pol(v_stat0, P0); // P0 stores initial values of the components of polarization vector.
 
@@ -162,7 +160,6 @@ int main(int argc, char *argv[])
 	{
 		state.analyse(state.v_stat, P0, 0, 0);
 	}
-#endif
 
 	if (!is_ff)
 	{
@@ -183,10 +180,8 @@ int main(int argc, char *argv[])
 
 		if (t_iter % pars.ANAL_EVERY == 0)
 		{
-#ifdef COLL_OSC_ON
 			// Analyze to note the deviation of conserved quantities.
 			state.analyse(state.v_stat, P0, 0, t_iter);
-#endif
 			// Estimates the survival probabilities.
 			state.surv_prob(state.v_stat, v_stat0, t_iter);
 		}

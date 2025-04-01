@@ -4,7 +4,7 @@
 
 # Spatial domain specifics.
 zrange: [-600, 600]
-nzs: [1200]
+nzs: [2400]
 CFLS: [0.4]
 
 #----------------------------------------------------------------#
@@ -20,11 +20,11 @@ boundary: periodic # Options ->  periodic, open
 
 #----------------------------------------------------------------#
 
-end_time: 1200 # Physical end time
+end_time: 2400 # Physical end time
 
 #----------------------------------------------------------------#
 
-perturbation_size: 1e-2
+perturbation_size: 0.0e-6
 
 #----------------------------------------------------------------#
 
@@ -32,9 +32,9 @@ perturbation_size: 1e-2
 advection_off: False # Options -> True, False
 
 # Switch on/off vacuum oscillation
-vac_osc_on: False # options -> True, False
+vac_osc_on: True # options -> True, False
 pmo: 1.0 # 1.0 -> normal mass ordering, -1.0 -> inverted mass ordering, 0.0 -> no vacuum term.
-omega: 1.0 # \Dedlta m^2/2E.
+omega: 1e-2 # \Dedlta m^2/2E.
 theta: 37 # Vacuum mixing angle in degrees.
 
 mat_osc_on: False
@@ -55,13 +55,13 @@ n_dump_rho: 100 # number of times density matrix elements has to be dumped.
 #----------------------------------------------------------------#
 
 # Folder names
-folder_fv: "lin_a_m1em3"
+folder_fv: "fv_slow_test_wpert_gcross_alpha_0x9_signswitch"
 folder_fd: "output_from_fd"
 
 #----------------------------------------------------------------#
 
 condor_requests:
-  ncpu: 32
+  ncpu: 20
   ram: 10G
   storage: 20G
 
