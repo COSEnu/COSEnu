@@ -8,3 +8,8 @@ lib_bk/*
 *(copy)*
 .vscode/*
 .ipynb_checkpoints
+*.config
+*.err
+*.out
+*.log
+
