@@ -4,6 +4,7 @@ main.o
 *.bin
 *.txt
 *.ipynb
+.swp
 lib_bk/*
 *(copy)*
 .vscode/*

@@ -254,7 +254,7 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
             out->ex_re[idx(i, j)] += -2.0 * ct * exi[0] * pmo;
             out->ex_im[idx(i, j)] += (2.0 * ct * exr[0] + st * (ee[0] - xx[0])) * pmo;
 
-            out->bee[idx(i, j)] += -0.0;
+            out->bee[idx(i, j)] += -2.0 * st * bexi[0] * pmo;
             out->bxx[idx(i, j)] += 2.0 * st * bexi[0] * pmo;
             out->bex_re[idx(i, j)] += -2.0 * ct * bexi[0] * pmo;
             out->bex_im[idx(i, j)] += (2.0 * ct * bexr[0] + st * (bee[0] - bxx[0])) * pmo;
