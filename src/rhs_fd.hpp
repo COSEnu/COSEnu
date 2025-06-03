@@ -5,8 +5,97 @@
 
 void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
 {
+
+#ifdef COLL_OSC_ON
+            // calculating zeroth moment I and first moment J
+    FieldVar *Irho, *Jrho;
+    Irho = new FieldVar(nz);
+    Jrho = new FieldVar(nz);
+#pragma omp parallel 
+#pragma acc loop gang
+    for(int j=0;j<nz;j++){
+        Irho->ee[j]=0.0;
+        Irho->xx[j]=0.0;
+        Irho->ex_re[j]=0.0;
+        Irho->ex_im[j]=0.0;
+        Irho->bee[j]=0.0;
+        Irho->bxx[j]=0.0;
+        Irho->bex_re[j]=0.0;
+        Irho->bex_im[j]=0.0;
+        Jrho->ee[j]=0.0;
+        Jrho->xx[j]=0.0;
+        Jrho->ex_re[j]=0.0;
+        Jrho->ex_im[j]=0.0;
+        Jrho->bee[j]=0.0;
+        Jrho->bxx[j]=0.0;
+        Jrho->bex_re[j]=0.0;
+        Jrho->bex_im[j]=0.0;
+        real Iee = 0;
+        real Ixx = 0;
+        real Iexr = 0;
+        real Iexi = 0;
+        real Ibee = 0;
+        real Ibxx = 0;
+        real Ibexr = 0;
+        real Ibexi = 0;
+        real Jee = 0;
+        real Jxx = 0;
+        real Jexr = 0;
+        real Jexi = 0;
+        real Jbee = 0;
+        real Jbxx = 0;
+        real Jbexr = 0;
+        real Jbexi = 0;
+#pragma acc loop vector
+        for (int i = 0; i < nvz; i++)
+        {
+            real *ee = &(in->ee[idx(i, j)]);
+            real *xx = &(in->xx[idx(i, j)]);
+            real *exr = &(in->ex_re[idx(i, j)]);
+            real *exi = &(in->ex_im[idx(i, j)]);
+            real *bee = &(in->bee[idx(i, j)]);
+            real *bxx = &(in->bxx[idx(i, j)]);
+            real *bexr = &(in->bex_re[idx(i, j)]);
+            real *bexi = &(in->bex_im[idx(i, j)]);
+            Iee += vw[i]*ee[0];
+            Ixx += vw[i]*xx[0];
+            Iexr += vw[i]*exr[0];
+            Iexi += vw[i]*exi[0];
+            Ibee += vw[i]*bee[0];
+            Ibxx += vw[i]*bxx[0];
+            Ibexr += vw[i]*bexr[0];
+            Ibexi += vw[i]*bexi[0];
+            Jee += vw[i]*vz[i]*ee[0];
+            Jxx += vw[i]*vz[i]*xx[0];
+            Jexr += vw[i]*vz[i]*exr[0];
+            Jexi += vw[i]*vz[i]*exi[0];
+            Jbee += vw[i]*vz[i]*bee[0];
+            Jbxx += vw[i]*vz[i]*bxx[0];
+            Jbexr += vw[i]*vz[i]*bexr[0];
+            Jbexi += vw[i]*vz[i]*bexi[0];
+        }
+        Irho->ee[j]=Iee*dv;
+        Irho->xx[j]=Ixx*dv;
+        Irho->ex_re[j]=Iexr*dv;
+        Irho->ex_im[j]=Iexi*dv;
+        Irho->bee[j]=Ibee*dv;
+        Irho->bxx[j]=Ibxx*dv;
+        Irho->bex_re[j]=Ibexr*dv;
+        Irho->bex_im[j]=Ibexi*dv;
+        Jrho->ee[j]=Jee*dv;
+        Jrho->xx[j]=Jxx*dv;
+        Jrho->ex_re[j]=Jexr*dv;
+        Jrho->ex_im[j]=Jexi*dv; 
+        Jrho->bee[j]=Jbee*dv;
+        Jrho->bxx[j]=Jbxx*dv;
+        Jrho->bex_re[j]=Jbexr*dv;
+        Jrho->bex_im[j]=Jbexi*dv; 
+    }
+#endif
+
+
 #pragma omp parallel for collapse(2)
-#pragma acc parallel loop  gang /*async*/ // default(present) //gang //private(fac, s, ij, ee, xx, exr, exi, bee, bexx, bexr, bexi)
+#pragma acc parallel loop gang /*async*/ // default(present) //gang //private(fac, s, ij, ee, xx, exr, exi, bee, bexx, bexr, bexi)
     for (int i = 0; i < nvz; i++)
 #pragma acc loop vector private(fac, s, ij, ee, xx, exr, exi, bee, bexx, bexr, bexi)
         for (int j = 0; j < nz; j++)
@@ -15,7 +104,6 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
             real *xx = &(in->xx[idx(i, j)]);
             real *exr = &(in->ex_re[idx(i, j)]);
             real *exi = &(in->ex_im[idx(i, j)]);
-            
             real *bee = &(in->bee[idx(i, j)]);
             real *bxx = &(in->bxx[idx(i, j)]);
             real *bexr = &(in->bex_re[idx(i, j)]);
@@ -81,48 +169,27 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
 #undef ADV_FD
 #endif
 
-            // 3) interaction terms: vz-integral with a simple trapezoidal rule (can be optimized later)
-#ifdef COLL_OSC_ON
-            real Iee = 0;
-            real Ixx = 0;
-            real Iexr = 0;
-            real Iexi = 0;
-            real Ibee = 0;
-            real Ibxx = 0;
-            real Ibexr = 0;
-            real Ibexi = 0;
-            
-#pragma acc loop seq /* vector*/ reduction(+:Iee, Ixx, Iexr, Iexi, Ibee, Ibxx, Ibexr, Ibexi) private(eep, xxp, expr, expi, beep, bxxp, bexpr, bexpi) //default(present)
-            for (int k = 0; k < nvz; k++)
-            { // vz' integral
-                real eep = (in->ee[idx(k, j)]);
-                real xxp = (in->xx[idx(k, j)]);
-                real expr = (in->ex_re[idx(k, j)]);
-                real expi = (in->ex_im[idx(k, j)]);
-                real beep = (in->bee[idx(k, j)]);
-                real bxxp = (in->bxx[idx(k, j)]);
-                real bexpr = (in->bex_re[idx(k, j)]);
-                real bexpi = (in->bex_im[idx(k, j)]);
+            // 3) interaction terms: 
+            // terms for -i* mu * [rho'-rho_bar', rho]
 
-                // terms for -i* mu * [rho'-rho_bar', rho]
-                Iee += 2 * vw[k] * mu * (1 - vz[i] * vz[k]) * (exr[0] * (expi + bexpi) - exi[0] * (expr - bexpr));
-                Ixx += -2 * vw[k] * mu * (1 - vz[i] * vz[k]) * (exr[0] * (expi + bexpi) - exi[0] * (expr - bexpr)); // = -Iee
-                Iexr += vw[k] * mu * (1 - vz[i] * vz[k]) * ((xx[0] - ee[0]) * (expi + bexpi) + exi[0] * (eep - xxp - beep + bxxp));
-                Iexi += vw[k] * mu * (1 - vz[i] * vz[k]) * (-(xx[0] - ee[0]) * (expr - bexpr) - exr[0] * (eep - xxp - beep + bxxp));
-                Ibee += 2 * vw[k] * mu * (1 - vz[i] * vz[k]) * (bexr[0] * (expi + bexpi) + bexi[0] * (expr - bexpr));
-                Ibxx += -2 * vw[k] * mu * (1 - vz[i] * vz[k]) * (bexr[0] * (expi + bexpi) + bexi[0] * (expr - bexpr)); // = -Ibee
-                Ibexr += vw[k] * mu * (1 - vz[i] * vz[k]) * ((bxx[0] - bee[0]) * (expi + bexpi) - bexi[0] * (eep - xxp - beep + bxxp));
-                Ibexi += vw[k] * mu * (1 - vz[i] * vz[k]) * ((bxx[0] - bee[0]) * (expr - bexpr) + bexr[0] * (eep - xxp - beep + bxxp));
-            }
+#ifdef COLL_OSC_ON            
             // 3.1) calculate integral with simple trapezoidal rule
-            out->ee[idx(i, j)] += dv * Iee;
-            out->xx[idx(i, j)] += dv * Ixx;
-            out->ex_re[idx(i, j)] += dv * Iexr;
-            out->ex_im[idx(i, j)] += dv * Iexi;
-            out->bee[idx(i, j)] += dv * Ibee;
-            out->bxx[idx(i, j)] += dv * Ibxx;
-            out->bex_re[idx(i, j)] += dv * Ibexr;
-            out->bex_im[idx(i, j)] += dv * Ibexi;
+            out->ee[idx(i, j)] +=  2*mu* ( (exr[0]*(Irho->ex_im[j]+Irho->bex_im[j])-exi[0]*(Irho->ex_re[j]-Irho->bex_re[j])) 
+                                   - vz[i]*(exr[0]*(Jrho->ex_im[j]+Jrho->bex_im[j])-exi[0]*(Jrho->ex_re[j]-Jrho->bex_re[j])) );
+            out->xx[idx(i, j)] += -2*mu* ( (exr[0]*(Irho->ex_im[j]+Irho->bex_im[j])-exi[0]*(Irho->ex_re[j]-Irho->bex_re[j])) 
+                                   - vz[i]*(exr[0]*(Jrho->ex_im[j]+Jrho->bex_im[j])-exi[0]*(Jrho->ex_re[j]-Jrho->bex_re[j])) );
+            out->ex_re[idx(i, j)] += mu* ( ((xx[0]-ee[0])*(Irho->ex_im[j]+Irho->bex_im[j])+exi[0]*(Irho->ee[j]-Irho->xx[j]-Irho->bee[j]+Irho->bxx[j])) 
+                                   - vz[i]*((xx[0]-ee[0])*(Jrho->ex_im[j]+Jrho->bex_im[j])+exi[0]*(Jrho->ee[j]-Jrho->xx[j]-Jrho->bee[j]+Jrho->bxx[j])) ); 
+            out->ex_im[idx(i, j)] += mu* ( (-(xx[0]-ee[0])*(Irho->ex_re[j]-Irho->bex_re[j])-exr[0]*(Irho->ee[j]-Irho->xx[j]-Irho->bee[j]+Irho->bxx[j])) 
+                                   - vz[i]*(-(xx[0]-ee[0])*(Jrho->ex_re[j]-Jrho->bex_re[j])-exr[0]*(Jrho->ee[j]-Jrho->xx[j]-Jrho->bee[j]+Jrho->bxx[j])) ); 
+            out->bee[idx(i, j)] +=  2*mu* ( (bexr[0]*(Irho->ex_im[j]+Irho->bex_im[j])+bexi[0]*(Irho->ex_re[j]-Irho->bex_re[j]))  
+                                    - vz[i]*(bexr[0]*(Jrho->ex_im[j]+Jrho->bex_im[j])+bexi[0]*(Jrho->ex_re[j]-Jrho->bex_re[j])) ) ;
+            out->bxx[idx(i, j)] += -2*mu* ( (bexr[0]*(Irho->ex_im[j]+Irho->bex_im[j])+bexi[0]*(Irho->ex_re[j]-Irho->bex_re[j])) 
+                                    - vz[i]*(bexr[0]*(Jrho->ex_im[j]+Jrho->bex_im[j])+bexi[0]*(Jrho->ex_re[j]-Jrho->bex_re[j])) );
+            out->bex_re[idx(i, j)] += mu* ( ((bxx[0]-bee[0])*(Irho->ex_im[j]+Irho->bex_im[j])-bexi[0]*(Irho->ee[j]-Irho->xx[j]-Irho->bee[j]+Irho->bxx[j])) 
+                                    - vz[i]*((bxx[0]-bee[0])*(Jrho->ex_im[j]+Jrho->bex_im[j])-bexi[0]*(Jrho->ee[j]-Jrho->xx[j]-Jrho->bee[j]+Jrho->bxx[j])) );
+            out->bex_im[idx(i, j)] += mu* ( ((bxx[0]-bee[0])*(Irho->ex_re[j]-Irho->bex_re[j])+bexr[0]*(Irho->ee[j]-Irho->xx[j]-Irho->bee[j]+Irho->bxx[j])) 
+                                    - vz[i]*((bxx[0]-bee[0])*(Jrho->ex_re[j]-Jrho->bex_re[j])+bexr[0]*(Jrho->ee[j]-Jrho->xx[j]-Jrho->bee[j]+Jrho->bxx[j])) );
 #endif
             // end of mu-part
 
