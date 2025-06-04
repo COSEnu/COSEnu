@@ -167,10 +167,10 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
             out->ex_re[idx(i, j)] += -2.0 * ct * exi[0] * pmo;
             out->ex_im[idx(i, j)] += (2.0 * ct * exr[0] + st * (ee[0] - xx[0])) * pmo;
 
-            out->bee[idx(i, j)] -= -2.0 * st * bexi[0] * pmo;
-            out->bxx[idx(i, j)] -= 2.0 * st * bexi[0] * pmo;
-            out->bex_re[idx(i, j)] -= -2.0 * ct * bexi[0] * pmo;
-            out->bex_im[idx(i, j)] -= (2.0 * ct * bexr[0] + st * (bee[0] - bxx[0])) * pmo;
+            out->bee[idx(i, j)] += -2.0 * st * bexi[0] * pmo;
+            out->bxx[idx(i, j)] += 2.0 * st * bexi[0] * pmo;
+            out->bex_re[idx(i, j)] += -2.0 * ct * bexi[0] * pmo;
+            out->bex_im[idx(i, j)] += (2.0 * ct * bexr[0] + st * (bee[0] - bxx[0])) * pmo;
 #endif
 
 #if defined(MAT_OSC_ON)
@@ -215,10 +215,10 @@ void NuOsc::calRHS(FieldVar *out, const FieldVar *in)
                 Iexr += 1.0 * mut * (1.0 - vz[i] * vz[k]) * ((xx[0] - ee[0]) * (expi + bexpi) + exi[0] * (eep - xxp - beep + bxxp));
                 Iexi += 1.0 * mut * (1.0 - vz[i] * vz[k]) * (-(xx[0] - ee[0]) * (expr - bexpr) - exr[0] * (eep - xxp - beep + bxxp));
 
-                Ibee -= 2.0 * mut * (1.0 - vz[i] * vz[k]) * (-bexr[0] * (-expi - bexpi) + bexi[0] * (expr - bexpr));
-                Ibxx -= -2.0 * mut * (1.0 - vz[i] * vz[k]) * (-bexr[0] * (-expi - bexpi) + bexi[0] * (expr - bexpr));
-                Ibexr -= 1.0 * mut * (1.0 - vz[i] * vz[k]) * (-(bee[0] - bxx[0]) * (expi + bexpi) - bexi[0] * (eep - xxp - beep + bxxp));
-                Ibexi -= 1.0 * mut * (1.0 - vz[i] * vz[k]) * ((bee[0] - bxx[0]) * (bexpr - expr) + bexr[0] * (eep - xxp - beep + bxxp));
+                Ibee += 2.0 * mut * (1.0 - vz[i] * vz[k]) * (-bexr[0] * (-expi - bexpi) + bexi[0] * (expr - bexpr));
+                Ibxx += -2.0 * mut * (1.0 - vz[i] * vz[k]) * (-bexr[0] * (-expi - bexpi) + bexi[0] * (expr - bexpr));
+                Ibexr += 1.0 * mut * (1.0 - vz[i] * vz[k]) * (-(bee[0] - bxx[0]) * (expi + bexpi) - bexi[0] * (eep - xxp - beep + bxxp));
+                Ibexi += 1.0 * mut * (1.0 - vz[i] * vz[k]) * ((bee[0] - bxx[0]) * (bexpr - expr) + bexr[0] * (eep - xxp - beep + bxxp));
             }
 
             out->ee[idx(i, j)] += dv * (Iee);

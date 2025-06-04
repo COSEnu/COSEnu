@@ -12,4 +12,6 @@ lib_bk/*
 *.err
 *.out
 *.log
-
+SFC_FFC/
+test/
+v_mint/
